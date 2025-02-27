@@ -1,6 +1,9 @@
 import React from "react";
+import { useMediaQuery } from "react-responsive";
 import styled from "styled-components";
 import { Logo } from "../logo";
+import { DeviceSize } from "../responsive";
+import { MobileNavLinks } from "./mobileNavLinks";
 import { NavLinks } from "./navLinks";
 import { SettingIcons } from "./settingIcons";
 
@@ -31,16 +34,19 @@ const RightSection = styled.div`
     padding-right: 20px;
 `;
 
-export function NavBar(props) {
+export function NavBar({ isDarkMode }) {
+    const isMobile = useMediaQuery({ maxWidth: DeviceSize.mobile });
+
     return <NavBarContainer>
         <LeftSection>
-            <Logo/>
+            <Logo isDarkMode={isDarkMode}/>
         </LeftSection>
         <MiddleSection>
-            <NavLinks/>
+            {!isMobile && <NavLinks/>}
         </MiddleSection>
         <RightSection>
-            <SettingIcons/>
+            {!isMobile && <SettingIcons isDarkMode={isDarkMode}/>}
+            {isMobile && <MobileNavLinks isDarkMode={isDarkMode}/>}
         </RightSection>
     </NavBarContainer>
 }

@@ -26,9 +26,13 @@ const LogoText = styled.h2`
     font-weight: 500;
 `;
 
-export function Logo(props) {
+export function Logo({ isDarkMode }) {
+    const logoSrc = isDarkMode ? ChessLogoWhite : ChessLogoBlack;
+
     return <LogoWrapper>
-        <LogoImg><img src={ChessLogoBlack} alt="Chess Logo"/></LogoImg>
+        <LogoImg>
+            <img src={logoSrc} alt="Chess Logo"/>
+        </LogoImg>
         <LogoText>Chess Openings</LogoText>
     </LogoWrapper>
 }

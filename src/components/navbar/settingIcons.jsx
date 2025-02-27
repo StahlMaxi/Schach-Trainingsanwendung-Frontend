@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import IconButton from '@mui/material/IconButton';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 const SettingsIconContainer = styled.div`
@@ -16,11 +17,11 @@ const SettingButton = styled(IconButton)`
     }
 `;
 
-export function SettingIcons(props) {
+export function SettingIcons({ isDarkMode }) {
     return(
         <SettingsIconContainer>
             <SettingButton>
-                <DarkModeIcon/>
+                {isDarkMode ? <LightModeIcon/> : <DarkModeIcon/>}
             </SettingButton>
             <SettingButton>
                 <SettingsIcon/>
