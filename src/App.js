@@ -1,5 +1,5 @@
 import './App.css';
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 import { NavBar } from './components/navbar';
 import { useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
@@ -13,6 +13,7 @@ const AppContainer = styled.div`
 `;
 
 function App() {
+  const { toggleTheme } = useTheme();
   const [isDarkMode, setDarkMode] = useState(false);
 
   return (
