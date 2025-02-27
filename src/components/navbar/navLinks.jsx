@@ -1,4 +1,5 @@
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
 
 const NavLinksContainer = styled.div`
@@ -24,26 +25,35 @@ const LinkItem = styled.li`
     display: flex;
     align-items: center;
     justify-content: center;
-    border-top: 2px solid transparent;
+    border-bottom: 2px solid transparent;
     transition: all 200ms ease-in-out;
+    background-color: ${({ isActive }) => (isActive ? "#d3d3d3" : "transparent")};
 
     &:hover {
-        border-top: 1px solid #2ecc71;
+        border-bottom: 1px solid #2ecc71;
     }
 `;
 
-const Link = styled.a`
+const StyledLink = styled(Link)`
     text-decoration: none;
     color: inherit;
     font-size: inherit;
 `;
 
 export function NavLinks() {
+    const { pathname } = useLocation();
+
     return <NavLinksContainer>
         <LinksWrapper>
-            <LinkItem><Link href="#">Home</Link></LinkItem>
-            <LinkItem><Link href="#">Lernen</Link></LinkItem>
-            <LinkItem><Link href="#">Training</Link></LinkItem>
+            <LinkItem isActive={pathname === "/"}>
+                <StyledLink to="/">Home</StyledLink>
+            </LinkItem>
+            <LinkItem isActive={pathname === "/learn"}>
+                <StyledLink to="/learn">Lernen</StyledLink>
+            </LinkItem>
+            <LinkItem isActive={pathname === "/train"}>
+                <StyledLink to="/train">Training</StyledLink>
+            </LinkItem>
         </LinksWrapper>
     </NavLinksContainer>
 }
