@@ -1,9 +1,10 @@
 import './App.css';
+import { NavBar } from './components/navbar';
 
 function App() {
   return (
     <div>
-      Schach
+      <NavBar/>
     </div>
   );
 }
