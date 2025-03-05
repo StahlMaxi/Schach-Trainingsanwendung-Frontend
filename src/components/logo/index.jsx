@@ -1,12 +1,18 @@
 import React from "react";
 import styled from "styled-components";
 import { useTheme } from "../../theme/themeContext";
+import { Link } from "react-router-dom";
 import ChessLogoWhite from "../../assets/logo/chessIconWhite.png";
 import ChessLogoBlack from "../../assets/logo/chessIconBlack.png";
 
 const LogoWrapper = styled.div`
     display: flex;
     align-items: center;
+`;
+
+const LogoLink = styled(Link)`
+    cursor: pointer;
+    text-decoration: none;
 `;
 
 const LogoImg = styled.div`
@@ -31,10 +37,14 @@ export function Logo() {
     const { theme } = useTheme();
     const logoSrc = theme.name === 'dark' ? ChessLogoWhite : ChessLogoBlack;
 
-    return <LogoWrapper>
-        <LogoImg>
-            <img src={logoSrc} alt="Chess Logo"/>
-        </LogoImg>
-        <LogoText>Chess Openings</LogoText>
-    </LogoWrapper>
+    return(
+        <LogoLink to="/">
+            <LogoWrapper>
+                <LogoImg>
+                    <img src={logoSrc} alt="Chess Logo" />
+                </LogoImg>
+                <LogoText>Chess Openings</LogoText>
+            </LogoWrapper>
+        </LogoLink>
+    );
 }

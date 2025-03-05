@@ -39,7 +39,7 @@ export function MenuToggle({ toggle, isOpen }) {
         />
         <Path
           d="M 2 9.423 L 20 9.423"
-          stroke="hsl(0, 0%, 18%)"
+          stroke={strokeColor}
           animate={isOpen ? "open" : "closed"}
           initial={false}
           variants={{

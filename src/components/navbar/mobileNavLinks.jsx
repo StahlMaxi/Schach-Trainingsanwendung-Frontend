@@ -5,7 +5,7 @@ import { useTheme } from "../../theme/themeContext";
 import { AccessibilityButtons } from "./accessibilityButtons";
 import { MenuToggle } from "./menuToggle";
 import { IconButton } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 
@@ -38,6 +38,9 @@ const LinkItem = styled.li`
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
+
+    border-bottom: ${(props) =>
+    props.active ? `3px solid ${props.theme.colors.active}` : "transparent"};
 `;
 
 const StyledLink = styled(Link)`
@@ -50,15 +53,25 @@ export function MobileNavLinks() {
     const [isOpen, setOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
 
+    const { pathname } = useLocation();
+
     const closeMenu = () => setOpen(false);
 
     return <NavLinksContainer>
         <MenuToggle isOpen={isOpen} toggle={() => setOpen(!isOpen)}/>
         {isOpen && <LinksWrapper>
-            <LinkItem><StyledLink to="/" onClick={closeMenu}>Home</StyledLink></LinkItem>
-            <LinkItem><StyledLink to="/learn" onClick={closeMenu}>Lernen</StyledLink></LinkItem>
-            <LinkItem><StyledLink to="/train" onClick={closeMenu}>Training</StyledLink></LinkItem>
-            <LinkItem><StyledLink to="/settings" onClick={closeMenu}>Einstellungen</StyledLink></LinkItem>
+            <LinkItem active={pathname === "/" }>
+                <StyledLink to="/" onClick={closeMenu}>Home</StyledLink>
+            </LinkItem>
+            <LinkItem active={pathname === "/learn"}>
+                <StyledLink to="/learn" onClick={closeMenu}>Lernen</StyledLink>
+            </LinkItem>
+            <LinkItem active={pathname === "/train"}>
+                <StyledLink to="/train" onClick={closeMenu}>Training</StyledLink>
+            </LinkItem>
+            <LinkItem active={pathname === "/settings"}>
+                <StyledLink to="/settings" onClick={closeMenu}>Einstellungen</StyledLink>
+            </LinkItem>
             <IconButton onClick={toggleTheme}>
                 {theme.name === 'dark' ? <LightModeIcon/> : <DarkModeIcon/>}
             </IconButton>
