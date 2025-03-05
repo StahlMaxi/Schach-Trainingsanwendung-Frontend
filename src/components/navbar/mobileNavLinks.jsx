@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { useState } from "react";
+import { useTheme } from "../../theme/themeContext";
 import { AccessibilityButtons } from "./accessibilityButtons";
 import { MenuToggle } from "./menuToggle";
 import { IconButton } from "@mui/material";
@@ -20,7 +21,7 @@ const LinksWrapper = styled.ul`
     align-items: center;
     height: 100%;
     list-style: none;
-    background-color: #fff;
+    background-color: ${(props) => props.theme.colors.background};
     width: 100%;
     flex-direction: column;
     position: fixed;
@@ -31,9 +32,9 @@ const LinksWrapper = styled.ul`
 const LinkItem = styled.li`
     width: auto;
     padding: 0 1.1em;
-    color: #222;
-    font-weight: 500;
-    font-size: 20px;
+    color: ${(props) => props.theme.colors.text};
+    font-weight: ${(props) => props.theme.typography.h3.fontWeight};
+    font-size: ${(props) => props.theme.typography.h3.fontSize};
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
@@ -45,8 +46,9 @@ const StyledLink = styled(Link)`
     font-size: inherit;
 `;
 
-export function MobileNavLinks({ isDarkMode }) {
+export function MobileNavLinks() {
     const [isOpen, setOpen] = useState(false);
+    const { theme, toggleTheme } = useTheme();
 
     const closeMenu = () => setOpen(false);
 
@@ -57,8 +59,8 @@ export function MobileNavLinks({ isDarkMode }) {
             <LinkItem><StyledLink to="/learn" onClick={closeMenu}>Lernen</StyledLink></LinkItem>
             <LinkItem><StyledLink to="/train" onClick={closeMenu}>Training</StyledLink></LinkItem>
             <LinkItem><StyledLink to="/settings" onClick={closeMenu}>Einstellungen</StyledLink></LinkItem>
-            <IconButton>
-                {isDarkMode ? <LightModeIcon/> : <DarkModeIcon/>}
+            <IconButton onClick={toggleTheme}>
+                {theme.name === 'dark' ? <LightModeIcon/> : <DarkModeIcon/>}
             </IconButton>
             <AccessibilityButtons/>
         </LinksWrapper>}

@@ -19,18 +19,19 @@ const LinksWrapper = styled.ul`
 const LinkItem = styled.li`
     height: 100%;
     padding: 0 1.1em;
-    color: #222;
-    font-weight: 500;
-    font-size: 20px;
+    color: ${(props) => props.theme.colors.text};
+    font-weight: ${(props) => props.theme.typography.h3.fontWeight};
+    font-size: font-size: ${(props) => props.theme.typography.h3.fontSize};
     display: flex;
     align-items: center;
     justify-content: center;
     border-bottom: 2px solid transparent;
     transition: all 200ms ease-in-out;
-    background-color: ${({ isActive }) => (isActive ? "#d3d3d3" : "transparent")};
+    background-color: ${(props) =>
+        props.active ? '#adb5bd' : "transparent"};
 
     &:hover {
-        border-bottom: 1px solid #2ecc71;
+        border-bottom: 1px solid ${(props) => props.theme.colors.active};
     }
 `;
 
@@ -45,13 +46,13 @@ export function NavLinks() {
 
     return <NavLinksContainer>
         <LinksWrapper>
-            <LinkItem isActive={pathname === "/"}>
+            <LinkItem active={pathname === "/" }>
                 <StyledLink to="/">Home</StyledLink>
             </LinkItem>
-            <LinkItem isActive={pathname === "/learn"}>
+            <LinkItem active={pathname === "/learn"}>
                 <StyledLink to="/learn">Lernen</StyledLink>
             </LinkItem>
-            <LinkItem isActive={pathname === "/train"}>
+            <LinkItem active={pathname === "/train"}>
                 <StyledLink to="/train">Training</StyledLink>
             </LinkItem>
         </LinksWrapper>

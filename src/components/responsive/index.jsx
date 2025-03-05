@@ -1,5 +1,5 @@
 export const DeviceSize = {
-    mobile: 650,
+    mobile: 750,
     tablet: 992,
     laptop: 1324,
     desktop: 2024,

@@ -1,6 +1,6 @@
 import React from "react";
 import { useMediaQuery } from "react-responsive";
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 import { Logo } from "../logo";
 import { DeviceSize } from "../responsive";
 import { MobileNavLinks } from "./mobileNavLinks";
@@ -11,6 +11,7 @@ const NavBarContainer = styled.div`
     width: 100%;
     height: 60px;
     box-shadow: 0 1px 3px rgba(15, 15, 15, 0.13);
+    background-color: ${(props) => props.theme.colors.navbar};
     display: flex;
     align-items: center;
     padding: 0 1.5em;
@@ -34,19 +35,20 @@ const RightSection = styled.div`
     padding-right: 20px;
 `;
 
-export function NavBar({ isDarkMode }) {
+export function NavBar() {
+    const { theme } = useTheme();
     const isMobile = useMediaQuery({ maxWidth: DeviceSize.mobile });
 
-    return <NavBarContainer>
+    return <NavBarContainer theme={theme}>
         <LeftSection>
-            <Logo isDarkMode={isDarkMode}/>
+            <Logo/>
         </LeftSection>
         <MiddleSection>
             {!isMobile && <NavLinks/>}
         </MiddleSection>
         <RightSection>
-            {!isMobile && <SettingIcons isDarkMode={isDarkMode}/>}
-            {isMobile && <MobileNavLinks isDarkMode={isDarkMode}/>}
+            {!isMobile && <SettingIcons/>}
+            {isMobile && <MobileNavLinks/>}
         </RightSection>
     </NavBarContainer>
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { useTheme } from "../../theme/themeContext";
 import ChessLogoWhite from "../../assets/logo/chessIconWhite.png";
 import ChessLogoBlack from "../../assets/logo/chessIconBlack.png";
 
@@ -18,16 +19,17 @@ const LogoImg = styled.div`
     }
 `;
 
-const LogoText = styled.h2`
-    font-size: 16px;
+const LogoText = styled.h3`
+    font-size: ${(props) => props.theme.typography.h3.fontSize};
+    font-weight: ${(props) => props.theme.typography.h3.fontWeight};
     margin: 0;
     margin-left: 4px;
-    color: #222;
-    font-weight: 500;
+    color: ${(props) => props.theme.colors.text};
 `;
 
-export function Logo({ isDarkMode }) {
-    const logoSrc = isDarkMode ? ChessLogoWhite : ChessLogoBlack;
+export function Logo() {
+    const { theme } = useTheme();
+    const logoSrc = theme.name === 'dark' ? ChessLogoWhite : ChessLogoBlack;
 
     return <LogoWrapper>
         <LogoImg>

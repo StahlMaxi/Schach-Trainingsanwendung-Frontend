@@ -1,11 +1,12 @@
 import './App.css';
-import styled, { useTheme } from "styled-components";
+import styled from "styled-components";
+import { useTheme } from './theme/themeContext';
 import { NavBar } from './components/navbar';
-import { useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { HomePage } from './components/pages/home';
 import { LearningPage } from './components/pages/learning';
 import { TrainingPage } from './components/pages/training';
+import { SettingPage } from './components/pages/settings';
 
 const AppContainer = styled.div`
   min-width: 340;
@@ -13,17 +14,17 @@ const AppContainer = styled.div`
 `;
 
 function App() {
-  const { toggleTheme } = useTheme();
-  const [isDarkMode, setDarkMode] = useState(false);
+  const { theme } = useTheme();
 
   return (
-    <AppContainer>
-      <NavBar isDarkMode={isDarkMode}/>
+    <AppContainer theme={theme}>
+      <NavBar/>
       <div className='container'>
         <Routes>
           <Route path="/" element={<HomePage/>}/>
           <Route path="/learn" element={<LearningPage/>}/>
           <Route path="/train" element={<TrainingPage/>}/>
+          <Route path="/settings" element={<SettingPage/>}/>
         </Routes>
       </div>
     </AppContainer>

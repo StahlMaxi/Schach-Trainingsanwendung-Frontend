@@ -10,15 +10,10 @@ const AccessibilityButtonsContainer  = styled.div`
 
 const AccessibilityButton = styled(Button)`
     width: 150px;
-    padding: 8px 1em;
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    border-radius: 20px;
-    cursor: pointer;
 `;
 
 export function AccessibilityButtons() {
+
     return(
         <AccessibilityButtonsContainer>
             <AccessibilityButton variant="outlined">Login</AccessibilityButton>
