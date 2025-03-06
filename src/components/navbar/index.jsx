@@ -35,7 +35,7 @@ const RightSection = styled.div`
     padding-right: 20px;
 `;
 
-export function NavBar() {
+export function NavBar({ setNavBarOpen }) {
     const { theme } = useTheme();
     const isMobile = useMediaQuery({ maxWidth: DeviceSize.mobile });
 
@@ -48,7 +48,7 @@ export function NavBar() {
         </MiddleSection>
         <RightSection>
             {!isMobile && <SettingIcons/>}
-            {isMobile && <MobileNavLinks/>}
+            {isMobile && <MobileNavLinks setNavBarOpen={setNavBarOpen}/>}
         </RightSection>
     </NavBarContainer>
 }

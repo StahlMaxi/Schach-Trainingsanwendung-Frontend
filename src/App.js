@@ -17,19 +17,21 @@ import { TrainingPageLO } from './components/pages/loggedOut/trainingLO';
 import { SettingPageLO } from './components/pages/loggedOut/settingsLO';
 
 const AppContainer = styled.div`
-  min-width: 340;
+  min-width: 375px;
   max-width: 2560px;
 `;
 
 function App() {
   const { theme } = useTheme();
 
-  const [isLoggedIn, setLoggedIn] = useState(true);
+  const [isLoggedIn, setLoggedIn] = useState(false);
+
+  const [navBarOpen, setNavBarOpen] = useState(false);
 
   return (
     <AppContainer theme={theme}>
-      <NavBar/>
-      <div className='container'>
+      <NavBar setNavBarOpen={setNavBarOpen}/>
+      {!navBarOpen && <div className='container'>
         <Routes>
           <Route path="/" element={isLoggedIn ? <HomePage/> : <HomePageLO/>}/>
           <Route path="/learn" element={isLoggedIn ? <LearningPage/> : <LearningPageLO/>}/>
@@ -39,7 +41,7 @@ function App() {
           <Route path="/register" element={<RegistrationPage/>}/>
           <Route path="*" element={<Navigate to="/"/>}></Route>
         </Routes>
-      </div>
+      </div>}
     </AppContainer>
   );
 }

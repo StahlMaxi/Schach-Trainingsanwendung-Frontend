@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { Button } from "@mui/material";
 
-const AccessibilityButtonsContainer  = styled.div`
+const AccessibilityButtonsContainer = styled.div`
     display: flex;
     margin-top: 20px;
     gap: 10px;

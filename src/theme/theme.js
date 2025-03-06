@@ -29,10 +29,12 @@ export const lightTheme = {
   name: 'light',
   colors: {
     background: '#F8F9FA',
+    backgroundCounter: '#121212',
     card: '#FFFFFF',
     navbar: '#F1F3F5',
     // Text
     text: '#212529',
+    textCounter: '#E0E0E0',
     secText: '#6C757D',
     placeHolder: '#ADB5BD',
     // IconButtons
@@ -92,10 +94,12 @@ export const darkTheme = {
   name: 'dark',
   colors: {
     background: '#121212',
+    backgroundCounter: '#F8F9FA',
     card: '#1E1E1E',
     navbar: '#242424',
     //Text
     text: '#E0E0E0',
+    textCounter: '#212529',
     secText: '#B0B0B0',
     placeHolder: '#8D8D8D',
     //IconButtons
