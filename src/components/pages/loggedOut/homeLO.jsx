@@ -5,6 +5,7 @@ import { useMediaQuery } from "react-responsive";
 import { DeviceSize } from "../../responsive";
 import ChessBoard from "../../../assets/chessBoard.webp";
 import { useTheme } from "../../../theme/themeContext";
+import { Link } from "react-router-dom";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const PageContainer = styled.div`
@@ -160,8 +161,12 @@ export function HomePageLO() {
                     </AdvantageContainer>
                 </AdvantagesContainer>
                 <AccessibilityButtonsContainer>
-                    <AccessibilityButton sx={buttonColor} variant="contained">Login</AccessibilityButton>
-                    <AccessibilityButton  sx={buttonColor} variant="contained">Registrieren</AccessibilityButton>
+                    <Link to="/login">
+                        <AccessibilityButton sx={buttonColor} variant="contained">Login</AccessibilityButton>
+                    </Link>
+                    <Link to="/register">
+                        <AccessibilityButton  sx={buttonColor} variant="contained">Registrieren</AccessibilityButton>
+                    </Link>
                 </AccessibilityButtonsContainer>
                 <AdvantagesContainer>
                 <AdvantageContainer>
