@@ -9,6 +9,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import styled from "styled-components";
 import { Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import ChessBackground from "../../assets/chessBackground.jpg";
 import { Link } from "react-router-dom";
 import { login } from "../../services/authorizationService";
@@ -73,6 +74,8 @@ export function LoginPage({setLoggedIn}) {
 
     const [showPwText, setShowPwText] = useState(false);
 
+    const navigate = useNavigate();
+
     const handleClickShowPassword = () => setShowPwText((show) => !show);
 
     const handleMouseDownPassword = (event) => {
@@ -89,6 +92,7 @@ export function LoginPage({setLoggedIn}) {
             setLoggedIn(true);
             setUserName("");
             setPassword("");
+            navigate("/");
         } catch (error) {
         console.error('Fehler beim Login:', error);
         }

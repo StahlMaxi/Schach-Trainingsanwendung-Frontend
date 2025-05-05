@@ -9,7 +9,6 @@ import { Link } from "react-router-dom";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const PageContainer = styled.div`
-    height: 100%;
     display: flex;
     flex-direction: column;
     height: calc(100vh - 60px);
