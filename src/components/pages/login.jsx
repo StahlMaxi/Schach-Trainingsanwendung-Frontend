@@ -11,6 +11,7 @@ import styled from "styled-components";
 import { Button } from "@mui/material";
 import ChessBackground from "../../assets/chessBackground.jpg";
 import { Link } from "react-router-dom";
+import { login } from "../../services/authorizationService";
 
 const Content = styled.div`
     height: 100%;
@@ -82,9 +83,14 @@ export function LoginPage() {
         event.preventDefault();
     };
 
-    const login = () => {
-        console.log(userName);
-        console.log(password);
+    async function loginPressed() {
+        try {
+            await login({ name: userName, password: password });
+            setUserName("");
+            setPassword("");
+        } catch (error) {
+        console.error('Fehler beim Login:', error);
+        }
     }
 
     return(
@@ -121,7 +127,7 @@ export function LoginPage() {
                         />
                     </StyledFormControl>
                 </PasswordWrapper>
-                <StyledButton variant="contained" onClick={login}>Login</StyledButton>
+                <StyledButton variant="contained" onClick={loginPressed}>Login</StyledButton>
                 <StyledBody>
                     Haben sie noch kein Konto?<br/>
                     <StyledLink to="/register">

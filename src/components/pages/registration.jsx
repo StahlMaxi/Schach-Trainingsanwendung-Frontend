@@ -7,9 +7,13 @@ import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 import styled from "styled-components";
 import { Button } from "@mui/material";
 import ChessBackground from "../../assets/chessBackground.jpg";
+import { register } from "../../services/authorizationService";
+import { useNavigate } from "react-router-dom";
 
 const Content = styled.div`
     height: 100%;
@@ -62,6 +66,10 @@ export function RegistrationPage() {
     const [showPwText, setShowPwText] = useState(false);
     const [showConfText, setShowConfText] = useState(false);
 
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+
+    const navigate = useNavigate();
+
     const handleClickShowPassword = () => setShowPwText((show) => !show);
     const handleClickShowConfirmation = () => setShowConfText((show) => !show);
 
@@ -73,10 +81,26 @@ export function RegistrationPage() {
         event.preventDefault();
     };
 
-    const register = () => {
-        console.log(userName);
-        console.log(password);
-        console.log(passwordConfirmation);
+    const handleCloseSnackbar = (_, reason) => {
+        if (reason === 'clickaway') return;
+        setOpenSnackbar(false);
+      };
+
+    async function registerButtonPressed() {
+        if(password === passwordConfirmation) {
+            try {
+                await register({ name: userName, password: password });
+                setUserName("");
+                setPassword("");
+                setPasswordConfirmation("");
+                setOpenSnackbar(true);
+                setTimeout(() => navigate("/login"), 2000);
+              } catch (error) {
+                console.error('Fehler bei der Registrierung:', error);
+              }
+        } else {
+
+        }
     }
 
     return(
@@ -141,8 +165,18 @@ export function RegistrationPage() {
                         />
                     </StyledFormControl>
                 </PasswordWrapper>
-                <StyledButton variant="contained" onClick={register}>Registrieren</StyledButton>
+                <StyledButton variant="contained" onClick={registerButtonPressed}>Registrieren</StyledButton>
             </FieldWrapper>
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={3000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                >
+                <MuiAlert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+                    Registrierung erfolgreich!
+                </MuiAlert>
+            </Snackbar>
         </Content>
     );
 }
