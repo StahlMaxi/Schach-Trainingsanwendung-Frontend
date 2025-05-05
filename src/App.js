@@ -1,9 +1,9 @@
 import './App.css';
 import styled from "styled-components";
 import { useTheme } from './theme/themeContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavBar } from './components/navbar';
-import { Route, Routes, Navigate } from 'react-router-dom';
+import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { HomePage } from './components/pages/loggedIn/home';
 import { LearningPage } from './components/pages/loggedIn/learning';
 import { TrainingPage } from './components/pages/loggedIn/training';
@@ -31,6 +31,25 @@ function App() {
 
   const [navBarOpen, setNavBarOpen] = useState(false);
 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    checkValidToken();
+  }, []); 
+
+  function checkValidToken() {
+    const itemStr = localStorage.getItem('token');
+    if (!itemStr) return;
+  
+    const item = JSON.parse(itemStr);
+    if (new Date().getTime() > item.expiry) {
+      localStorage.removeItem('token');
+      return;
+    }
+    setLoggedIn(true);
+    navigate("/");
+  }
+
   return (
     <AppContainer theme={theme}>
       <NavBar setNavBarOpen={setNavBarOpen}/>
@@ -40,7 +59,7 @@ function App() {
           <Route path="/learn" element={isLoggedIn ? <LearningPage/> : <LearningPageLO/>}/>
           <Route path="/train" element={isLoggedIn ? <TrainingPage/> : <TrainingPageLO/>}/>
           <Route path="/settings" element={isLoggedIn ? <SettingPage/> : <Navigate to="/login"/>}/>
-          <Route path="/login" element={<LoginPage/>}/>
+          <Route path="/login" element={<LoginPage setLoggedIn={setLoggedIn}/>}/>
           <Route path="/register" element={<RegistrationPage/>}/>
           <Route path="*" element={<Navigate to="/"/>}></Route>
         </Routes>

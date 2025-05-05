@@ -33,7 +33,16 @@ export async function login(credentials) {
     }
 
     const data = await response.json();
-    localStorage.setItem('token', data.token);
+
+    const token = data.token;
+    const expiresIn = 2 * 60 * 60 * 1000; //2 Stunden
+
+    const record = {
+      value: token,
+      expiry: new Date().getTime() + expiresIn,
+    };
+
+    localStorage.setItem('token', JSON.stringify(record));
   } catch (error) {
     throw error;
   }

@@ -67,7 +67,7 @@ const StyledLink = styled(Link)`
     color: ${(props) => props.theme.colors.text};
 `;
 
-export function LoginPage() {
+export function LoginPage({setLoggedIn}) {
     const [userName, setUserName] = useState("");
     const [password, setPassword] = useState("");
 
@@ -86,6 +86,7 @@ export function LoginPage() {
     async function loginPressed() {
         try {
             await login({ name: userName, password: password });
+            setLoggedIn(true);
             setUserName("");
             setPassword("");
         } catch (error) {
