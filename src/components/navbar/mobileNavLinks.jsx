@@ -40,7 +40,7 @@ const LinkItem = styled.li`
     margin-bottom: 20px;
 
     border-bottom: ${(props) =>
-    props.active ? `3px solid ${props.theme.colors.active}` : "transparent"};
+    props.active ? `3px solid ${props.theme.colors.selectedHover}` : "transparent"};
 `;
 
 const StyledLink = styled(Link)`
@@ -49,16 +49,24 @@ const StyledLink = styled(Link)`
     font-size: inherit;
 `;
 
-export function MobileNavLinks() {
+export function MobileNavLinks({ setNavBarOpen }) {
     const [isOpen, setOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
 
     const { pathname } = useLocation();
 
-    const closeMenu = () => setOpen(false);
+    function closeMenu() {
+        setOpen(false);
+        setNavBarOpen(false);
+    }
+
+    function openNavBar() {
+        setOpen(!isOpen);
+        setNavBarOpen(!isOpen);
+    }
 
     return <NavLinksContainer>
-        <MenuToggle isOpen={isOpen} toggle={() => setOpen(!isOpen)}/>
+        <MenuToggle isOpen={isOpen} toggle={() => openNavBar(!isOpen)}/>
         {isOpen && <LinksWrapper>
             <LinkItem active={pathname === "/" }>
                 <StyledLink to="/" onClick={closeMenu}>Home</StyledLink>
@@ -75,7 +83,7 @@ export function MobileNavLinks() {
             <IconButton onClick={toggleTheme}>
                 {theme.name === 'dark' ? <LightModeIcon/> : <DarkModeIcon/>}
             </IconButton>
-            <AccessibilityButtons/>
+            <AccessibilityButtons closeFunction={closeMenu} />
         </LinksWrapper>}
     </NavLinksContainer>
 }
