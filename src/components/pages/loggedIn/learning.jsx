@@ -96,7 +96,6 @@ const MoveItem = styled.div`
 const SelectedMoveContainer = styled.div`
     padding: 10px;
     background-color: ${(props) => props.theme.colors.navbar};
-    border-top: 2px solid #aaa;
 `;
 
 const ArrowButtonContainer = styled.div`
@@ -123,9 +122,12 @@ const ArrowButton = styled.button`
 //Eröffnungen
 const OpeningContainer = styled.div`
     width: 20%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     gap: 20px;
+    align-self: flex-end;
+    margin-left: auto;
 `;
 
 const StyledOpeningsContainer = styled.div`
