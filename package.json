@@ -8,6 +8,7 @@
     "@mui/icons-material": "^6.4.6",
     "@mui/material": "^6.4.6",
     "@mui/styled-engine-sc": "^6.4.6",
+    "chess.js": "^1.2.0",
     "cra-template": "1.2.0",
     "framer-motion": "^12.4.7",
     "react": "^19.0.0",

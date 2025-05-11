@@ -40,7 +40,7 @@ const LinkItem = styled.li`
     margin-bottom: 20px;
 
     border-bottom: ${(props) =>
-    props.active ? `3px solid ${props.theme.colors.active}` : "transparent"};
+    props.active ? `3px solid ${props.theme.colors.selectedHover}` : "transparent"};
 `;
 
 const StyledLink = styled(Link)`
@@ -83,7 +83,7 @@ export function MobileNavLinks({ setNavBarOpen }) {
             <IconButton onClick={toggleTheme}>
                 {theme.name === 'dark' ? <LightModeIcon/> : <DarkModeIcon/>}
             </IconButton>
-            <AccessibilityButtons/>
+            <AccessibilityButtons closeFunction={closeMenu} />
         </LinksWrapper>}
     </NavLinksContainer>
 }

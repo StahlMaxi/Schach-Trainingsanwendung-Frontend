@@ -1,9 +1,13 @@
 import React, { useLayoutEffect, useState } from "react";
 import styled from "styled-components";
 import { Chessboard } from "react-chessboard";
-import { TextField } from "@mui/material";
+import { Button, TextField } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useTheme } from "../../../theme/themeContext";
+import { Link } from "react-router-dom";
+
+import { Chess } from "chess.js";
 
 import { getOpenings } from "../../../services/openingService";
 import { getNextOpeningMoves } from "../../../services/openingService";
@@ -16,58 +20,13 @@ const PageContainer = styled.div`
     padding: 50px;
 `;
 
+//Schachbrett
 const ChessBoardContainer = styled.div`
     width: 60%;
     padding-left: 150px;
 `;
 
-const OpeningContainer = styled.div`
-    width: 20%;
-`
-
-const StyledOpeningsContainer = styled.div`
-    background-color: ${(props) => props.theme.colors.navbar};
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-`;
-
-const StyledTextFieldWrapper = styled.div`
-    display: flex;
-    align-items: center;
-    width: 100%;
-`;
-
-const StyledTextField = styled(TextField)`
-    flex-grow: 1;
-`;
-
-const StyledIconButton = styled(IconButton)`
-    margin-left: 10px;
-    padding: 8px;
-`;
-
-const OpeningScrollContainer = styled.div`
-    overflow-y: auto;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background-color: ${(props) => props.theme.colors.background};
-`;
-
-const OpeningItem = styled.div`
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-    cursor: pointer;
-    
-    &:hover {
-        background-color: #f0f0f0;
-    }
-`;
-
+//Varianten auswählen
 const ControlContainer = styled.div`
     width: 20%;
     display: flex;
@@ -77,8 +36,33 @@ const ControlContainer = styled.div`
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    background-color: ${(props) => props.theme.colors.navbar};
+    background-color: ${(props) => props.theme.colors.card};
     margin-right: 20px;
+`;
+
+const OpeningEndContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin-top: 20px;
+    background-color: ${(props) => props.theme.colors.hover};
+`;
+
+const StyledText = styled.div`
+    color: ${(props) => props.theme.colors.text};
+    font-weight: ${(props) => props.theme.typography.body.fontWeight};
+    font-size: ${(props) => props.theme.typography.body.fontSize};
+`;
+
+const BackButton = styled(Button)`
+    width: 100px;
+    height: 50px;
 `;
 
 const MoveScrollContainer = styled.div`
@@ -98,11 +82,14 @@ const MoveItem = styled.div`
     border: 1px solid #ccc;
     border-radius: 8px;
     cursor: pointer;
-    background-color: ${(props) => props.selected ? '#c8e6ff' : props.theme.colors.background};
+    background-color: ${(props) => props.selected ? props.theme.colors.selected : 'transparent'};
     transition: background-color 0.2s;
 
     &:hover {
-        background-color: #e0f7fa;
+        background-color: ${(props) =>
+            props.selected
+                ? props.theme.colors.selectedHover
+                : props.theme.colors.hover};
     }
 `;
 
@@ -125,27 +112,121 @@ const ArrowButton = styled.button`
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    background-color: black;
-    color: white;
+    background-color: ${(props) => props.theme.colors.backgroundCounter};
+    color: ${(props) => props.theme.colors.background};;
 
     &:hover {
-        background-color: #333;
+        background-color: ${(props) => props.theme.colors.counterHover};
     }
 `;
 
+//Eröffnungen
+const OpeningContainer = styled.div`
+    width: 20%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+`;
+
+const StyledOpeningsContainer = styled.div`
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: ${(props) => props.theme.colors.card};
+`;
+
+const StyledTextFieldWrapper = styled.div`
+    display: flex;
+    align-items: center;
+    width: 100%;
+`;
+
+const StyledTextField = styled(TextField)`
+    flex-grow: 1;
+`;
+
+const StyledIconButton = styled(IconButton)`
+    margin-left: 10px;
+    padding: 8px;
+`;
+
+const OpeningScrollContainer = styled.div`
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+`;
+
+const OpeningItem = styled.div`
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    cursor: pointer;
+    
+    &:hover {
+        background-color: ${(props) => props.theme.colors.hover};
+    }
+`;
+
+const InformationContainer = styled.div`
+    background-color: ${(props) => props.theme.colors.card};
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+`;
+
+const StyledPlayedMovesContainer = styled.div`
+    display: flex;
+    justifyContent: space-between;
+    text-align: center;
+`;
+
+const PlayedMoves = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: monospace;
+    font-size: 16px;
+    margin-left: 15px;
+    color: ${(props) => props.theme.colors.text};
+    font-weight: ${(props) => props.theme.typography.body.fontWeight};
+    font-size: ${(props) => props.theme.typography.body.fontSize};
+`;
+
+const MovesPlayedText = styled.div`
+    color: ${(props) => props.theme.colors.text};
+    font-weight: ${(props) => props.theme.typography.h3.fontWeight};
+    font-size: ${(props) => props.theme.typography.h3.fontSize};
+    text-align: center;
+`;
+
 export function LearningPage() {
+    const theme = useTheme();
+
     const [boardWidth, setBoardWith] = useState(0);
+    const [game, setGame] = useState(new Chess());
+    const [fen, setFen] = useState("start");
 
     const [openings, setOpenings] = useState([]);
     const [search, setSearch] = useState("");
-
     const [selectedOpening, setSelectedOpening] = useState(-1);
 
     const [nextMoves, setNextMoves] = useState([]);
-    const [playedMoves, setPlayedMoves] = useState(""); // Dies wird als gespielt verwendet
+    const [playedMoves, setPlayedMoves] = useState("");
+    const [noMoreMoves, setNoMoreMoves] = useState(false);
 
     const [selectedMoveIndex, setSelectedMoveIndex] = useState(-1);
     const [moveHistory, setMoveHistory] = useState([]);
+
+    const buttonColor = {
+        backgroundColor: theme.theme.colors.backgroundCounter,
+        color: theme.theme.colors.textCounter,
+    };
 
     useLayoutEffect(() => {
         const tokenCorrect = checkValidToken();
@@ -199,21 +280,28 @@ export function LearningPage() {
     }
 
     const resetSelectedOpening = () => {
+        const freshGame = new Chess();
+
+        setGame(freshGame);
+        setFen(freshGame.fen());
+
         setSearch('');
         setSelectedOpening(-1);
         setNextMoves([]);
         setPlayedMoves("");
         setSelectedMoveIndex(-1);
         setMoveHistory([]);
-    }
+    };
 
     async function getNextOpeningMovesRequest(id, played = "") {
-        console.log(id);
-        console.log(played);
         try {
             const data = await getNextOpeningMoves({ id, played });
-            console.log(data);
             const filteredMoves = data.filter(move => move.move && move.move.trim() !== "");
+            if(filteredMoves.length === 0) {
+                setNoMoreMoves(true);
+            } else {
+                setNoMoreMoves(false);
+            }
             setNextMoves(filteredMoves);
         } catch (error) {
             console.error('Fehler bei der Abfrage der nächsten Züge:', error);
@@ -227,43 +315,67 @@ export function LearningPage() {
     const handleForward = () => {
         if (selectedMoveIndex !== -1 && nextMoves[selectedMoveIndex]) {
             const move = nextMoves[selectedMoveIndex].move;
-            
-            let newPlayedMoves;
-            if(playedMoves.trim() !== "") {
-                newPlayedMoves = playedMoves + ' ' + move;
+
+            const newGame = new Chess();
+            moveHistory.forEach(m => newGame.move(m, { sloppy: true }));
+
+            const result = newGame.move(move, { sloppy: true });
+
+            if (result) {
+                const newPlayedMoves = playedMoves ? `${playedMoves} ${move}` : move;
+
+                setGame(newGame);
+                setFen(newGame.fen());
+                setPlayedMoves(newPlayedMoves);
+                setMoveHistory(prev => [...prev, move]);
+                setSelectedMoveIndex(-1);
+
+                getNextOpeningMovesRequest(selectedOpening, newPlayedMoves);
             } else {
-                newPlayedMoves = move;
+                console.warn("Ungültiger Zug:", move);
             }
-    
-            setPlayedMoves(newPlayedMoves);
-            setMoveHistory(prev => [...prev, move]);
-    
-            getNextOpeningMovesRequest(selectedOpening, newPlayedMoves);
         }
     };
 
     const handleBack = () => {
         if (moveHistory.length > 0) {
-            setMoveHistory(prev => {
-                const newHistory = [...prev];
-                newHistory.pop();
-    
-                const newPlayedMoves = newHistory.join(' ');
-                setPlayedMoves(newPlayedMoves);
-    
-                getNextOpeningMovesRequest(selectedOpening, newPlayedMoves);
-    
-                return newHistory;
-            });
+            const newHistory = [...moveHistory];
+            newHistory.pop();
+
+            const newPlayedMoves = newHistory.join(" ");
+            setPlayedMoves(newPlayedMoves);
+            setMoveHistory(newHistory);
+
+            const newGame = new Chess();
+            newHistory.forEach(move => newGame.move(move, { sloppy: true }));
+
+            setGame(newGame);
+            setFen(newGame.fen());
+
+            getNextOpeningMovesRequest(selectedOpening, newPlayedMoves);
         }
     };
+
 
     return (
         <PageContainer>
             <ChessBoardContainer id="boardDiv">
-                {boardWidth > 0 && <Chessboard id="BasicBoard" boardWidth={boardWidth} />}
+                {boardWidth > 0 && <Chessboard
+                    id="BasicBoard"
+                    position={fen}
+                    boardWidth={boardWidth}
+                    arePiecesDraggable={false}
+                />}
             </ChessBoardContainer>
             {selectedOpening !== -1 && <ControlContainer>
+                {noMoreMoves && (
+                    <OpeningEndContainer>
+                        <StyledText>Die Eröffnungsvariante ist zu Ende. Möchtest du sie nun üben?</StyledText>
+                        <Link to="/train">
+                            <BackButton sx={buttonColor} variant="contained">Üben</BackButton>
+                        </Link>
+                    </OpeningEndContainer>
+                )}
                 <MoveScrollContainer>
                     <ScrollableMoveList>
                         {nextMoves
@@ -291,16 +403,11 @@ export function LearningPage() {
                 )}
                 <ArrowButtonContainer>
                     <ArrowButton onClick={handleBack}>&larr;</ArrowButton>
-
-                    <StyledIconButton onClick={() => {setSelectedMoveIndex(-1)}}>
-                        <DeleteIcon />
-                    </StyledIconButton>
-
                     <ArrowButton onClick={handleForward}>&rarr;</ArrowButton>
                 </ArrowButtonContainer>
             </ControlContainer>}
             <OpeningContainer>
-                {selectedOpening && <StyledOpeningsContainer style={{ height: selectedOpening === -1 ? '100%' : null }}>
+                <StyledOpeningsContainer style={{ height: selectedOpening === -1 ? '100%' : null }}>
                     <StyledTextFieldWrapper>
                         <StyledTextField
                             id="outlined-basic"
@@ -313,18 +420,47 @@ export function LearningPage() {
                             <DeleteIcon />
                         </StyledIconButton>
                     </StyledTextFieldWrapper>
-                    {selectedOpening === -1 && <OpeningScrollContainer>
-                        {filteredOpenings.length === 0 ? (
-                            <div>Keine Eröffnungen gefunden</div>
-                        ) : (
-                            filteredOpenings.map((opening, index) => (
-                                <OpeningItem key={index} onClick={() => openingSelected(opening)}>
-                                    {opening.name}
-                                </OpeningItem>
-                            ))
-                        )}
-                    </OpeningScrollContainer>}
-                </StyledOpeningsContainer>}
+                    {selectedOpening === -1 && (
+                        <OpeningScrollContainer>
+                            {filteredOpenings.length === 0 ? (
+                                <div>Keine Eröffnungen gefunden</div>
+                            ) : (
+                                filteredOpenings.map((opening, index) => (
+                                    <OpeningItem key={index} onClick={() => openingSelected(opening)}>
+                                        {opening.name}
+                                    </OpeningItem>
+                                ))
+                            )}
+                        </OpeningScrollContainer>
+                    )} 
+                </StyledOpeningsContainer>
+                {moveHistory.length !== 0 && (
+                    <InformationContainer>
+                        <MovesPlayedText>Gespielte Züge</MovesPlayedText>
+                        <StyledPlayedMovesContainer>
+                            <div style={{ flex: 1 }}>
+                                <strong>Weiß:</strong>
+                                <PlayedMoves>
+                                    {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => (
+                                        <React.Fragment key={i}>
+                                            <div>{moveHistory[i * 2] || ""}</div>
+                                        </React.Fragment>
+                                    ))}
+                                </PlayedMoves>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <strong>Schwarz:</strong>
+                                <PlayedMoves>
+                                    {Array.from({ length: Math.floor(moveHistory.length / 2) }, (_, i) => (
+                                        <React.Fragment key={i}>
+                                            <div>{moveHistory[i * 2 + 1] || ""}</div>
+                                        </React.Fragment>
+                                    ))}
+                                </PlayedMoves>
+                            </div>
+                        </StyledPlayedMovesContainer>
+                    </InformationContainer>
+                )}
             </OpeningContainer>
         </PageContainer>
     );

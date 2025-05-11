@@ -28,10 +28,13 @@ const LinkItem = styled.li`
     border-bottom: 2px solid transparent;
     transition: all 200ms ease-in-out;
     background-color: ${(props) =>
-        props.active ? '#adb5bd' : "transparent"};
+        props.active ? props.theme.colors.selected : "transparent"};
 
-    &:hover {
-        border-bottom: 1px solid ${(props) => props.theme.colors.active};
+     &:hover {
+    background-color: ${(props) =>
+      props.active
+        ? props.theme.colors.selectedHover
+        : props.theme.colors.hover};
     }
 `;
 

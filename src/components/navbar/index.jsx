@@ -10,7 +10,8 @@ import { SettingIcons } from "./settingIcons";
 const NavBarContainer = styled.div`
     width: 100%;
     height: 60px;
-    box-shadow: 0 1px 3px rgba(15, 15, 15, 0.13);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     background-color: ${(props) => props.theme.colors.navbar};
     display: flex;
     align-items: center;

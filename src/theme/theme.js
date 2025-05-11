@@ -28,10 +28,10 @@ const commonTypography = {
 export const lightTheme = {
   name: 'light',
   colors: {
-    background: '#F8F9FA',
-    backgroundCounter: '#121212',
+    background: '#FFFFFF',
+    backgroundCounter: '#000000',
     card: '#FFFFFF',
-    navbar: '#F1F3F5',
+    navbar: '#FFFFFF',  
     // Text
     text: '#212529',
     textCounter: '#E0E0E0',
@@ -41,6 +41,11 @@ export const lightTheme = {
     iconButton: '#6C757D',
     iconHover: '#495057',
     active: '#2ECC71',
+    //List
+    hover: '#f1f3f5',
+    counterHover: '#333333',
+    selected: '#e3f2fd',
+    selectedHover: '#bbdefb',
   },
   typography: commonTypography,
   mui: createTheme({
@@ -48,7 +53,7 @@ export const lightTheme = {
       mode: 'light',
       primary: { main: '#6C757D' },  //iconButton
       background: { 
-        default: '#F8F9FA',  //background
+        default: '#FFFFFF',  //background
         paper: '#FFFFFF',    //card
       },
       text: { 
@@ -57,7 +62,6 @@ export const lightTheme = {
         disabled: '#ADB5BD',  //placeHolder
       },
       action: {
-        active: '#2ECC71', //active
         hover: '#495057',  //iconHover
       },
     },
@@ -105,7 +109,11 @@ export const darkTheme = {
     //IconButtons
     iconButton: '#B0B0B0',
     iconHover: '#E0E0E0',
-    active: '#2ecc71',
+    //List
+    hover: '#333333',
+    counterHover: '#b0b0b0',
+    selected: '#3a3a3a',
+    selectedHover: '#4a4a4a',
   },
   typography: commonTypography,
   mui: createTheme({
@@ -122,7 +130,6 @@ export const darkTheme = {
         disabled: '#8D8D8D',  //placeHolder
       },
       action: {
-        active: '#2ecc71', //active
         hover: '#E0E0E0',  //iconHover
       },
     },
