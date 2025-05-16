@@ -26,6 +26,32 @@ export async function getOpenings() {
   }
 }
 
+export async function getVariants(id) {
+  try {
+    const tokenData = localStorage.getItem('token');
+
+    const parsedTokenData = JSON.parse(tokenData);
+    const token = parsedTokenData.value;
+
+    const response = await fetch(`${REACT_APP_BACKEND_API_BASE_URL}/openings/${id}/variants`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Keine Erlaubnis für diese API');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
 export async function getNextOpeningMoves({ id, played }) {
   try {
     const tokenData = localStorage.getItem('token');
