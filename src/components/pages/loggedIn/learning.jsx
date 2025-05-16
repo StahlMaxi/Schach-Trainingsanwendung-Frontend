@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useState } from "react";
 import styled from "styled-components";
+import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { Button, TextField } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
@@ -7,8 +8,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useTheme } from "../../../theme/themeContext";
 import { Link } from "react-router-dom";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-
-import { Chess } from "chess.js";
 
 import { getOpenings } from "../../../services/openingService";
 import { getNextOpeningMoves } from "../../../services/openingService";
