@@ -89,10 +89,10 @@ export function LearningPageLO() {
         backgroundColor: theme.theme.colors.background,
         color: theme.theme.colors.text,
 
-        ["@media (max-width:1500px)"]: {
+        "@media (max-width:1500px)": {
             backgroundColor: theme.theme.colors.backgroundCounter,
             color: theme.theme.colors.textCounter,
-        }
+}
     };
 
     useLayoutEffect(() => {
