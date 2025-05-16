@@ -9,7 +9,7 @@ import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 
 import { getOpenings } from "../../../services/openingService";
 import { getVariants } from "../../../services/openingService";
-import { getNextOpeningMoves } from "../../../services/openingService";
+import { getNextVariantMove } from "../../../services/openingService";
 
 const PageContainer = styled.div`
     height: calc(100vh - 60px); 
@@ -106,7 +106,9 @@ export function TrainingPage() {
     const [variantSearch, setVariantSearch] = useState("");
     const [selectedVariant, setSelectedVariant] = useState(-1);
 
-    const [startWhite, setStartWhite] = useState(true);
+    const [startWhite, setStartWhite] = useState(null);
+
+    const [playedMoves, setPlayedMoves] = useState("");
 
     useLayoutEffect(() => {
         const tokenCorrect = checkValidToken();
@@ -188,7 +190,6 @@ export function TrainingPage() {
     };
 
     const variantSelected = (variant) => {
-        console.log(variant);
         setVariantSearch(variant.name);
         setSelectedVariant(variant.id);
     };
@@ -198,6 +199,110 @@ export function TrainingPage() {
         setSelectedVariant(-1);
     }
 
+    const startingSelected = (startPosition) => {
+        if(startPosition !== '') {
+            const startsWhite = startPosition === "white" ? true : startPosition === "black" ? false : null;
+            setStartWhite(startsWhite);
+            startGame(startsWhite);
+        }
+    }
+
+    async function getNextVariantMoveRequest(id, played = "") {
+        try {
+            const data = await getNextVariantMove({ id, played });
+            console.log(data.move);
+            return data;
+        } catch (error) {
+            console.error('Fehler bei der Abfrage der nächsten Züge:', error);
+        }
+    }
+
+    const startGame = async (startsWhite) => {
+        setPlayedMoves("");
+
+        const freshGame = new Chess();
+        setGame(freshGame);
+        setFen(freshGame.fen());
+
+        if(!startsWhite) {
+            computerMove();
+        }
+    };
+
+    const playerMove = async (from, to) => {
+        console.log("Spieler Zug");
+        console.log(game.fen());
+
+        const variantData = await getNextVariantMoveRequest(selectedVariant, playedMoves);
+        const expectedMove = variantData.move;
+
+        if (!expectedMove) {
+            console.log("Variante ist zu Ende.");
+            return false;
+        }
+
+        const expectedMoveSan = new Chess(game.fen()).move(expectedMove, { sloppy: true })?.san;
+        const attemptedMoveSan = new Chess(game.fen()).move({ from, to, promotion: "q" })?.san;
+
+        if (attemptedMoveSan === expectedMoveSan) {
+            console.log("✅ Korrekter Zug: " + attemptedMoveSan);
+
+            const gameCopy = new Chess(game.fen());
+            gameCopy.move(expectedMove, { sloppy: true });
+
+            const updatedMoves = playedMoves + (playedMoves ? "," : "") + expectedMove;
+
+            setGame(gameCopy);
+            setFen(gameCopy.fen());
+            setPlayedMoves(updatedMoves); // Async, aber wir haben die Variable
+
+            setTimeout(() => {
+                computerMove(updatedMoves, gameCopy); // WICHTIG: aktuelle Moves übergeben
+            }, 500);
+
+            return true;
+        } else {
+            console.log("❌ Falscher Zug. Erwartet wurde: " + expectedMoveSan);
+            return false;
+        }
+    };
+
+    const computerMove = async (currentMoves = playedMoves, playerGame = game) => {
+        console.log("Computer Zug", currentMoves);
+        console.log("FEN:", playerGame.fen());
+
+        const variantData = await getNextVariantMoveRequest(selectedVariant, currentMoves);
+        const nextMove = variantData.move;
+
+        if (!nextMove) {
+            console.log("Variante ist zu Ende.");
+            return;
+        }
+
+        const gameCopy = new Chess(playerGame.fen());
+        const moveResult = gameCopy.move(nextMove, { sloppy: true });
+
+        if (moveResult) {
+            const newPlayedMoves = currentMoves + (currentMoves ? "," : "") + nextMove;
+
+            setGame(gameCopy);
+            setFen(gameCopy.fen());
+            setPlayedMoves(newPlayedMoves);
+        } else {
+            console.error("Zug konnte nicht ausgeführt werden:", nextMove);
+        }
+    };
+
+    const resetGame = () => {
+        setPlayedMoves("");
+        setSelectedOpening(-1);
+        setSelectedVariant(-1);
+        setStartWhite(null);
+        const freshGame = new Chess();
+        setGame(freshGame);
+        setFen(freshGame.fen());
+    };
+
     return(
         <PageContainer>
             <ChessBoardContainer id="boardDiv">
@@ -205,7 +310,25 @@ export function TrainingPage() {
                     id="BasicBoard"
                     position={fen}
                     boardWidth={boardWidth}
-                />}
+                    boardOrientation={startWhite ? "white" : "black"}
+                    onPieceDrop={(sourceSquare, targetSquare, piece) => {
+                        const isWhiteTurn = game.turn() === 'w';
+                        const isUserTurn = (startWhite && isWhiteTurn) || (!startWhite && !isWhiteTurn);
+
+                        if (!isUserTurn) return false;
+
+                        const pieceOnSquare = game.get(sourceSquare);
+                        if (!pieceOnSquare) return false;
+
+                        const isUserPiece = (startWhite && pieceOnSquare.color === 'w') ||
+                                            (!startWhite && pieceOnSquare.color === 'b');
+
+                        if (!isUserPiece) return false;
+
+                        return playerMove(sourceSquare, targetSquare);
+                    }}
+                />
+                }
             </ChessBoardContainer>
             <InformationContainer>
                     
@@ -271,14 +394,17 @@ export function TrainingPage() {
                 )}
                 {selectedVariant !== -1 && <StyledOpeningsContainer>
                     <FormControl fullWidth variant="outlined" style={{ marginTop: '20px' }}>
-                        <InputLabel id="color-select-label">Seite Wählen</InputLabel>
+                        <InputLabel id="color-select-label">Startseite Wählen</InputLabel>
                         <Select
                             labelId="color-select-label"
                             id="color-select"
-                            value={startWhite ? "white" : "black"}
-                            onChange={(e) => setStartWhite(e.target.value === "white")}
+                            value={startWhite === null ? "" : startWhite ? "white" : "black"}
+                            onChange={(e) => {
+                                startingSelected(e.target.value);
+                            }}
                             label="Farbe wählen"
                         >
+                            <MenuItem value="">-</MenuItem>
                             <MenuItem value="white">Weiß</MenuItem>
                             <MenuItem value="black">Schwarz</MenuItem>
                         </Select>
