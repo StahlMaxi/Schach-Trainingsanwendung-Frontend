@@ -92,7 +92,7 @@ export function LearningPageLO() {
         "@media (max-width:1500px)": {
             backgroundColor: theme.theme.colors.backgroundCounter,
             color: theme.theme.colors.textCounter,
-}
+        }
     };
 
     useLayoutEffect(() => {

@@ -3,29 +3,24 @@ import styled from "styled-components";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { useTheme } from "../../../theme/themeContext";
-import { TextField, IconButton } from "@mui/material";
+import { TextField, IconButton, Button } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-
-import { getOpenings } from "../../../services/openingService";
-import { getVariants } from "../../../services/openingService";
-import { getNextVariantMove } from "../../../services/openingService";
+import { getOpenings, getVariants, getNextVariantMove } from "../../../services/openingService";
 
 const PageContainer = styled.div`
-    height: calc(100vh - 60px); 
+    height: calc(100vh - 60px);
     display: flex;
     flex-direction: row;
     background-color: ${(props) => props.theme.colors.background};
     padding: 50px;
 `;
 
-//Schachbrett
 const ChessBoardContainer = styled.div`
     width: 60%;
     padding-left: 150px;
 `;
 
-//Informationen
 const InformationContainer = styled.div`
     width: 20%;
     display: flex;
@@ -39,7 +34,6 @@ const InformationContainer = styled.div`
     margin-right: 20px;
 `;
 
-//Eröffnungen
 const OpeningContainer = styled.div`
     width: 20%;
     height: 100%;
@@ -86,15 +80,19 @@ const OpeningItem = styled.div`
     padding: 10px;
     border-bottom: 1px solid #ccc;
     cursor: pointer;
-    
     &:hover {
         background-color: ${(props) => props.theme.colors.hover};
     }
 `;
 
+const StyledButton = styled(Button)`
+    width: 100%;
+    height: 50px;
+`;
+
 export function TrainingPage() {
     const theme = useTheme();
-    
+
     const [boardWidth, setBoardWith] = useState(0);
     const [game, setGame] = useState(new Chess());
     const [fen, setFen] = useState("start");
@@ -107,15 +105,24 @@ export function TrainingPage() {
     const [selectedVariant, setSelectedVariant] = useState(-1);
 
     const [startWhite, setStartWhite] = useState(null);
-
     const [playedMoves, setPlayedMoves] = useState("");
+
+    const [gameText, setGameText] = useState("");
+    const [errors, setErrors] = useState(0);
+    const [hints, setHints] = useState(0);
+
+    const [nextExpectedPlayerMove, setNextExpectedPlayerMove] = useState("");
+
+    const buttonColor = {
+        backgroundColor: theme.theme.colors.backgroundCounter,
+        color: theme.theme.colors.textCounter,
+    };
 
     useLayoutEffect(() => {
         const tokenCorrect = checkValidToken();
         if (tokenCorrect) {
             getOpeningsRequest();
         }
-
         const divElement = document.getElementById('boardDiv');
         if (divElement) {
             const divWidth = divElement.offsetWidth;
@@ -126,7 +133,6 @@ export function TrainingPage() {
     function checkValidToken() {
         const itemStr = localStorage.getItem('token');
         if (!itemStr) return false;
-        
         const item = JSON.parse(itemStr);
         if (new Date().getTime() > item.expiry) {
             localStorage.removeItem('token');
@@ -163,7 +169,6 @@ export function TrainingPage() {
 
     const resetSelectedOpening = () => {
         const freshGame = new Chess();
-
         setGame(freshGame);
         setFen(freshGame.fen());
 
@@ -171,6 +176,8 @@ export function TrainingPage() {
         setVariantSearch("");
         setSelectedOpening(-1);
         setSelectedVariant(-1);
+
+        resetGame();
     };
 
     async function getVariantsRequest(openingId) {
@@ -197,17 +204,46 @@ export function TrainingPage() {
     const resetSelectedVariant = () => {
         setVariantSearch("");
         setSelectedVariant(-1);
+        
+        resetGame();
     }
 
     const startingSelected = (startPosition) => {
         if(startPosition !== '') {
-            const startsWhite = startPosition === "white" ? true : startPosition === "black" ? false : null;
+            const startsWhite = startPosition === "white" ? true : false;
             setStartWhite(startsWhite);
-            startGame(startsWhite);
         }
     }
 
+    const startGame = async () => {
+        const freshGame = new Chess();
+        setGame(freshGame);
+        setFen(freshGame.fen());
+        setPlayedMoves("");
+
+        if(startWhite) {
+            const variantData = await getNextVariantMoveRequest(selectedVariant, "");
+            const nextMove = variantData?.move;
+
+            if (!nextMove) {
+                setGameText("Die Variante ist zu Ende.");
+                return;
+            } else {
+                setNextExpectedPlayerMove(nextMove);
+            }
+        }
+
+        setGameText(startWhite ? "Du bist am Zug." : "Computer beginnt...");
+
+        if (!startWhite) {
+            setTimeout(async () => {
+                await handleComputerTurn();
+            }, 500);
+        }
+    };
+
     async function getNextVariantMoveRequest(id, played = "") {
+        console.log("Get Moves: " + played);
         try {
             const data = await getNextVariantMove({ id, played });
             console.log(data.move);
@@ -217,91 +253,88 @@ export function TrainingPage() {
         }
     }
 
-    const startGame = async (startsWhite) => {
-        setPlayedMoves("");
-
-        const freshGame = new Chess();
-        setGame(freshGame);
-        setFen(freshGame.fen());
-
-        if(!startsWhite) {
-            computerMove();
-        }
-    };
-
-    const playerMove = async (from, to) => {
-        console.log("Spieler Zug");
-        console.log(game.fen());
-
-        const variantData = await getNextVariantMoveRequest(selectedVariant, playedMoves);
-        const expectedMove = variantData.move;
-
-        if (!expectedMove) {
-            console.log("Variante ist zu Ende.");
+    const handlePlayerTurn = async (from, to) => {
+        let attemptedMove;
+        try {
+            attemptedMove = new Chess(game.fen()).move({ from, to, promotion: "q" })?.san;
+        } catch (err) {
+            setGameText("Ungültiger Zug. Bitte einen legalen Zug machen.");
             return false;
         }
+        const expectedMove = new Chess(game.fen()).move(nextExpectedPlayerMove, { sloppy: true })?.san;
 
-        const expectedMoveSan = new Chess(game.fen()).move(expectedMove, { sloppy: true })?.san;
-        const attemptedMoveSan = new Chess(game.fen()).move({ from, to, promotion: "q" })?.san;
-
-        if (attemptedMoveSan === expectedMoveSan) {
-            console.log("✅ Korrekter Zug: " + attemptedMoveSan);
-
+        if (attemptedMove === expectedMove) {
             const gameCopy = new Chess(game.fen());
-            gameCopy.move(expectedMove, { sloppy: true });
+            gameCopy.move(nextExpectedPlayerMove, { sloppy: true });
 
-            const updatedMoves = playedMoves + (playedMoves ? "," : "") + expectedMove;
+            const updatedMoves = playedMoves + (playedMoves ? "," : "") + nextExpectedPlayerMove;
 
             setGame(gameCopy);
             setFen(gameCopy.fen());
-            setPlayedMoves(updatedMoves); // Async, aber wir haben die Variable
+            setPlayedMoves(updatedMoves);
 
-            setTimeout(() => {
-                computerMove(updatedMoves, gameCopy); // WICHTIG: aktuelle Moves übergeben
+            setGameText("Richtiger Zug! Jetzt ist der Computer dran.");
+
+            setTimeout(async () => {
+                await handleComputerTurn(gameCopy, updatedMoves);
             }, 500);
-
             return true;
         } else {
-            console.log("❌ Falscher Zug. Erwartet wurde: " + expectedMoveSan);
+            setErrors(errors + 1);
+            setGameText("Falscher Zug. Versuche es nochmal.");
             return false;
         }
     };
 
-    const computerMove = async (currentMoves = playedMoves, playerGame = game) => {
-        console.log("Computer Zug", currentMoves);
-        console.log("FEN:", playerGame.fen());
-
+    const handleComputerTurn = async (playerGame = game, currentMoves = playedMoves) => {
         const variantData = await getNextVariantMoveRequest(selectedVariant, currentMoves);
-        const nextMove = variantData.move;
+        const nextMove = variantData?.move;
 
         if (!nextMove) {
-            console.log("Variante ist zu Ende.");
+            setGameText("Die Variante ist zu Ende.");
             return;
         }
 
         const gameCopy = new Chess(playerGame.fen());
         const moveResult = gameCopy.move(nextMove, { sloppy: true });
 
-        if (moveResult) {
-            const newPlayedMoves = currentMoves + (currentMoves ? "," : "") + nextMove;
+        if (!moveResult) {
+            return;
+        }
 
-            setGame(gameCopy);
-            setFen(gameCopy.fen());
-            setPlayedMoves(newPlayedMoves);
+        const updatedMoves = currentMoves + (currentMoves ? "," : "") + nextMove;
+
+        setGame(gameCopy);
+        setFen(gameCopy.fen());
+        setPlayedMoves(updatedMoves);
+
+        const newVariantData = await getNextVariantMoveRequest(selectedVariant, updatedMoves);
+        const newNextMove = newVariantData?.move;
+
+        if(!newNextMove) {
+            setGameText("Die Variante ist zu Ende.");
+            return;
         } else {
-            console.error("Zug konnte nicht ausgeführt werden:", nextMove);
+            setNextExpectedPlayerMove(newNextMove);
+            setGameText("Dein Zug!");
         }
     };
 
     const resetGame = () => {
-        setPlayedMoves("");
-        setSelectedOpening(-1);
-        setSelectedVariant(-1);
-        setStartWhite(null);
         const freshGame = new Chess();
+
         setGame(freshGame);
         setFen(freshGame.fen());
+        setPlayedMoves("");
+
+        setStartWhite(null);
+        setNextExpectedPlayerMove(null);
+
+        setGameText("");
+        setErrors(0);
+        setHints(0);
     };
+
 
     return(
         <PageContainer>
@@ -311,47 +344,43 @@ export function TrainingPage() {
                     position={fen}
                     boardWidth={boardWidth}
                     boardOrientation={startWhite ? "white" : "black"}
-                    onPieceDrop={(sourceSquare, targetSquare, piece) => {
-                        const isWhiteTurn = game.turn() === 'w';
-                        const isUserTurn = (startWhite && isWhiteTurn) || (!startWhite && !isWhiteTurn);
-
-                        if (!isUserTurn) return false;
+                    onPieceDrop={(sourceSquare, targetSquare) => {
+                        const turn = game.turn();
+                        const isPlayerTurn = (startWhite && turn === 'w') || (!startWhite && turn === 'b');
+                        if (!isPlayerTurn) return false;
 
                         const pieceOnSquare = game.get(sourceSquare);
                         if (!pieceOnSquare) return false;
 
-                        const isUserPiece = (startWhite && pieceOnSquare.color === 'w') ||
-                                            (!startWhite && pieceOnSquare.color === 'b');
-
+                        const isUserPiece = (startWhite && pieceOnSquare.color === 'w') || (!startWhite && pieceOnSquare.color === 'b');
                         if (!isUserPiece) return false;
-
-                        return playerMove(sourceSquare, targetSquare);
+                        
+                        return handlePlayerTurn(sourceSquare, targetSquare);
                     }}
-                />
-                }
+                />}
             </ChessBoardContainer>
             <InformationContainer>
-                    
+                <h3>{gameText}</h3>
+                <p>Anzahl Fehler: {errors}</p>
+                <p>Anzahl Hinweise: {hints}</p>
             </InformationContainer>
             <OpeningContainer>
                 <StyledOpeningsContainer style={{ height: selectedOpening === -1 ? '100%' : null }}>
                     <StyledTextFieldWrapper>
                         <StyledTextField
-                            id="outlined-basic"
                             value={openingSearch}
                             onChange={handleOpeningSearchChange}
                             label="Eröffnung auswählen (Name/ID)"
                             variant="outlined"
                         />
-                        <StyledIconButton onClick={() => resetSelectedOpening()}>
+                        <StyledIconButton onClick={resetSelectedOpening}>
                             <DeleteIcon />
                         </StyledIconButton>
                     </StyledTextFieldWrapper>
-
                     {selectedOpening === -1 && (
                         <OpeningScrollContainer>
                             {filteredOpenings.length === 0 ? (
-                                <div>Keine Eröffnungen gefunden</div>
+                                <div>Keine Eröffnung gefunden</div>
                             ) : (
                                 filteredOpenings.map((opening, index) => (
                                     <OpeningItem key={index} onClick={() => openingSelected(opening)}>
@@ -366,17 +395,15 @@ export function TrainingPage() {
                     <StyledOpeningsContainer>
                         <StyledTextFieldWrapper>
                             <StyledTextField
-                                id="variant-search"
                                 value={variantSearch}
                                 onChange={(e) => setVariantSearch(e.target.value)}
                                 label="Variante auswählen"
                                 variant="outlined"
                             />
-                            <StyledIconButton onClick={() => resetSelectedVariant()}>
+                            <StyledIconButton onClick={resetSelectedVariant}>
                                 <DeleteIcon />
                             </StyledIconButton>
                         </StyledTextFieldWrapper>
-
                         {selectedVariant === -1 && (
                             <OpeningScrollContainer>
                                 {filteredVariants().length === 0 ? (
@@ -394,21 +421,20 @@ export function TrainingPage() {
                 )}
                 {selectedVariant !== -1 && <StyledOpeningsContainer>
                     <FormControl fullWidth variant="outlined" style={{ marginTop: '20px' }}>
-                        <InputLabel id="color-select-label">Startseite Wählen</InputLabel>
+                        <InputLabel id="color-select-label">Startseite wählen</InputLabel>
                         <Select
                             labelId="color-select-label"
                             id="color-select"
                             value={startWhite === null ? "" : startWhite ? "white" : "black"}
-                            onChange={(e) => {
-                                startingSelected(e.target.value);
-                            }}
-                            label="Farbe wählen"
+                            onChange={(e) => startingSelected(e.target.value)}
+                            label="Farbe w\u00e4hlen"
                         >
                             <MenuItem value="">-</MenuItem>
                             <MenuItem value="white">Weiß</MenuItem>
                             <MenuItem value="black">Schwarz</MenuItem>
                         </Select>
                     </FormControl>
+                    <StyledButton sx={buttonColor} onClick={startGame} variant="contained">Start</StyledButton>
                 </StyledOpeningsContainer>}
             </OpeningContainer>
         </PageContainer>
