@@ -6,6 +6,8 @@ import { useTheme } from "../../../theme/themeContext";
 import { TextField, IconButton, Button } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+
 import { getOpenings, getVariants, getNextVariantMove } from "../../../services/openingService";
 
 const PageContainer = styled.div`
@@ -21,19 +23,7 @@ const ChessBoardContainer = styled.div`
     padding-left: 150px;
 `;
 
-const InformationContainer = styled.div`
-    width: 20%;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    background-color: ${(props) => props.theme.colors.card};
-    margin-right: 20px;
-`;
-
+//Select Opening and Variant
 const OpeningContainer = styled.div`
     width: 20%;
     height: 100%;
@@ -90,6 +80,56 @@ const StyledButton = styled(Button)`
     height: 50px;
 `;
 
+//Information
+const InformationContainer = styled.div`
+    width: 20%;
+    display: flex;
+    flex-direction: column;
+    align-self: flex-start;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    background-color: ${(props) => props.theme.colors.card};
+    margin-right: 20px;
+`;
+
+const InfoHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+`;
+
+const ResetButton = styled(IconButton)`
+    float: right;
+`;
+
+const HintButton = styled(Button)`
+    margin-top: 10px;
+`;
+
+const InfoSection = styled.div`
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+`;
+
+const Label = styled.p`
+    font-weight: bold;
+    margin: 0;
+`;
+
+const Value = styled.p`
+    margin: 0;
+`;
+
+const Separator = styled.div`
+    height: 1px;
+    background-color: #ccc;
+    margin: 15px 0;
+`;
+
+
 export function TrainingPage() {
     const theme = useTheme();
 
@@ -110,8 +150,12 @@ export function TrainingPage() {
     const [gameText, setGameText] = useState("");
     const [errors, setErrors] = useState(0);
     const [hints, setHints] = useState(0);
+    const [hintStep, setHintStep] = useState(0);
+    const [hintText, setHintText] = useState("");
 
     const [nextExpectedPlayerMove, setNextExpectedPlayerMove] = useState("");
+
+    const [gameRunning, setGameRunning] = useState(false);
 
     const buttonColor = {
         backgroundColor: theme.theme.colors.backgroundCounter,
@@ -216,24 +260,23 @@ export function TrainingPage() {
     }
 
     const startGame = async () => {
-        const freshGame = new Chess();
-        setGame(freshGame);
-        setFen(freshGame.fen());
-        setPlayedMoves("");
+        resetGame();
+        setGameRunning(true);
 
         if(startWhite) {
             const variantData = await getNextVariantMoveRequest(selectedVariant, "");
             const nextMove = variantData?.move;
 
             if (!nextMove) {
-                setGameText("Die Variante ist zu Ende.");
+                setGameText("Die Variante besitzt keine Züge");
+                setGameRunning(false);
                 return;
             } else {
                 setNextExpectedPlayerMove(nextMove);
             }
         }
 
-        setGameText(startWhite ? "Du bist am Zug." : "Computer beginnt...");
+        setGameText(startWhite ? "Du bist am Zug." : "Computer beginnt.");
 
         if (!startWhite) {
             setTimeout(async () => {
@@ -258,7 +301,7 @@ export function TrainingPage() {
         try {
             attemptedMove = new Chess(game.fen()).move({ from, to, promotion: "q" })?.san;
         } catch (err) {
-            setGameText("Ungültiger Zug. Bitte einen legalen Zug machen.");
+            setGameText("Ungültiger Zug. Bitte führe einen legalen Zug aus.");
             return false;
         }
         const expectedMove = new Chess(game.fen()).move(nextExpectedPlayerMove, { sloppy: true })?.san;
@@ -274,6 +317,9 @@ export function TrainingPage() {
             setPlayedMoves(updatedMoves);
 
             setGameText("Richtiger Zug! Jetzt ist der Computer dran.");
+
+            setHintStep(0);
+            setHintText("");
 
             setTimeout(async () => {
                 await handleComputerTurn(gameCopy, updatedMoves);
@@ -291,7 +337,8 @@ export function TrainingPage() {
         const nextMove = variantData?.move;
 
         if (!nextMove) {
-            setGameText("Die Variante ist zu Ende.");
+            setGameText("Die Variante ist zu Ende. Deine Ergebnisse werden nun abgespeichert. Du kannst nun entweder eine neue Eröffnung trainieren oder von vorne starten.");
+            setGameRunning(false);
             return;
         }
 
@@ -312,29 +359,51 @@ export function TrainingPage() {
         const newNextMove = newVariantData?.move;
 
         if(!newNextMove) {
-            setGameText("Die Variante ist zu Ende.");
+            setGameText("Die Variante ist zu Ende. Deine Ergebnisse werden nun abgespeichert. Du kannst nun entweder eine neue Eröffnung trainieren oder von vorne starten.");
+            setGameRunning(false);
             return;
         } else {
             setNextExpectedPlayerMove(newNextMove);
-            setGameText("Dein Zug!");
+            setGameText("Du bist am Zug.");
         }
     };
 
     const resetGame = () => {
+        setGameRunning(false);
         const freshGame = new Chess();
 
         setGame(freshGame);
         setFen(freshGame.fen());
         setPlayedMoves("");
 
-        setStartWhite(null);
         setNextExpectedPlayerMove(null);
 
         setGameText("");
         setErrors(0);
+
         setHints(0);
+        setHintStep(0);
+        setHintText("");
     };
 
+    const handleHint = () => {
+        if (!nextExpectedPlayerMove) return;
+
+        const from = nextExpectedPlayerMove.slice(0, 2);
+        const to = nextExpectedPlayerMove.slice(2, 4);
+
+        if (hintStep === 0) {
+            setHintText(`Zug beginnt auf Feld ${from}`);
+        } else {
+            setHintText(`Vollständiger Zug ist ${from} → ${to}`);
+
+        }
+
+        setHintStep(hintStep + 1);
+        if(hintStep <= 1) {
+            setHints(hints + 1);
+        }
+    };
 
     return(
         <PageContainer>
@@ -354,15 +423,50 @@ export function TrainingPage() {
 
                         const isUserPiece = (startWhite && pieceOnSquare.color === 'w') || (!startWhite && pieceOnSquare.color === 'b');
                         if (!isUserPiece) return false;
-                        
+
                         return handlePlayerTurn(sourceSquare, targetSquare);
                     }}
                 />}
             </ChessBoardContainer>
             <InformationContainer>
-                <h3>{gameText}</h3>
-                <p>Anzahl Fehler: {errors}</p>
-                <p>Anzahl Hinweise: {hints}</p>
+                <InfoHeader>
+                    <h3>Informationen</h3>
+                    <ResetButton onClick={resetGame} color="error" title="Spiel zurücksetzen">
+                        <RestartAltIcon />
+                    </ResetButton>
+                </InfoHeader>
+
+                <InfoSection>
+                    <Value>{gameText}</Value>
+                </InfoSection>
+
+                <Separator />
+
+                <InfoSection>
+                    <Label>Anzahl Fehler:</Label>
+                    <Value>{errors}</Value>
+
+                    <Label>Anzahl Hinweise:</Label>
+                    <Value>{hints}</Value>
+                </InfoSection>
+
+                <Separator />
+
+                <InfoSection>
+                    {hintText && 
+                        <div>
+                            <h3>Hinweis: </h3>
+                            <p>{hintText}</p>
+                        </div>
+                    }
+                    <HintButton
+                        sx={buttonColor}
+                        variant="contained"
+                        onClick={handleHint}
+                    >
+                        Hinweis anzeigen
+                    </HintButton>
+                </InfoSection>
             </InformationContainer>
             <OpeningContainer>
                 <StyledOpeningsContainer style={{ height: selectedOpening === -1 ? '100%' : null }}>
@@ -427,7 +531,8 @@ export function TrainingPage() {
                             id="color-select"
                             value={startWhite === null ? "" : startWhite ? "white" : "black"}
                             onChange={(e) => startingSelected(e.target.value)}
-                            label="Farbe w\u00e4hlen"
+                            label="Farbe wählen"
+                            disabled={gameRunning}
                         >
                             <MenuItem value="">-</MenuItem>
                             <MenuItem value="white">Weiß</MenuItem>
