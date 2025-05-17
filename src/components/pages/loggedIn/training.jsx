@@ -387,7 +387,7 @@ export function TrainingPage() {
     };
 
     const handleHint = () => {
-        if (!nextExpectedPlayerMove) return;
+        if (!nextExpectedPlayerMove || !gameRunning) return;
 
         const from = nextExpectedPlayerMove.slice(0, 2);
         const to = nextExpectedPlayerMove.slice(2, 4);
@@ -414,6 +414,7 @@ export function TrainingPage() {
                     boardWidth={boardWidth}
                     boardOrientation={startWhite ? "white" : "black"}
                     onPieceDrop={(sourceSquare, targetSquare) => {
+                        if (!gameRunning) return;
                         const turn = game.turn();
                         const isPlayerTurn = (startWhite && turn === 'w') || (!startWhite && turn === 'b');
                         if (!isPlayerTurn) return false;
