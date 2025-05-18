@@ -9,6 +9,7 @@ import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 import { getOpenings, getVariants, getNextVariantMove } from "../../../services/openingService";
+import { setVariantStatistics } from "../../../services/statisticsService";
 
 const PageContainer = styled.div`
     height: calc(100vh - 60px);
@@ -338,6 +339,7 @@ export function TrainingPage() {
 
         if (!nextMove) {
             setGameText("Die Variante ist zu Ende. Deine Ergebnisse werden nun abgespeichert. Du kannst nun entweder eine neue Eröffnung trainieren oder von vorne starten.");
+            setVariantStatisticsRequest();
             setGameRunning(false);
             return;
         }
@@ -360,6 +362,7 @@ export function TrainingPage() {
 
         if(!newNextMove) {
             setGameText("Die Variante ist zu Ende. Deine Ergebnisse werden nun abgespeichert. Du kannst nun entweder eine neue Eröffnung trainieren oder von vorne starten.");
+            setVariantStatisticsRequest();
             setGameRunning(false);
             return;
         } else {
@@ -404,6 +407,14 @@ export function TrainingPage() {
             setHints(hints + 1);
         }
     };
+
+    async function setVariantStatisticsRequest() {
+        try {
+            await setVariantStatistics({variantId: selectedVariant, errors, hints});
+        } catch (error) {
+            console.error('Fehler beim Speichern der Variantendaten:', error);
+        }
+    }
 
     return(
         <PageContainer>
