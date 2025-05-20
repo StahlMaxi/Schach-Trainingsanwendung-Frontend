@@ -6,6 +6,7 @@ import { Button, TextField, IconButton } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useTheme } from "../../../theme/themeContext";
 import { Link } from "react-router-dom";
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 import { getOpenings } from "../../../services/openingService";
@@ -90,6 +91,24 @@ const MoveItem = styled.div`
                 ? props.theme.colors.selectedHover
                 : props.theme.colors.hover};
     }
+`;
+
+const VariantContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+`;
+
+const Separator = styled.hr`
+    margin: 20px 0;
+    border: 0;
+    border-top: 1px solid #000;
+`;
+
+const ButtonContainer = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
 `;
 
 //Eröffnungen
@@ -192,6 +211,8 @@ export function LearningPage() {
     const [selectedOpening, setSelectedOpening] = useState(-1);
 
     const [nextMoves, setNextMoves] = useState([]);
+    const [selectedMoveIndex, setSelectedMoveIndex] = useState(-1);
+    const [selectedVariant, setSelectedVariant] = useState(null);
     const [playedMoves, setPlayedMoves] = useState("");
     const [noMoreMoves, setNoMoreMoves] = useState(false);
 
@@ -264,12 +285,30 @@ export function LearningPage() {
         setNextMoves([]);
         setPlayedMoves("");
         setMoveHistory([]);
+        setNoMoreMoves(false);
+        setSelectedVariant(null);
+        setSelectedMoveIndex(-1);
     };
 
     async function getNextOpeningMovesRequest(id, played = "") {
         try {
             const data = await getNextOpeningMoves({ id, played });
             const filteredMoves = data.filter(move => move.move && move.move.trim() !== "");
+
+            if(selectedVariant && filteredMoves.length !== 0) {
+                if (selectedVariant) {
+                    const index = filteredMoves.findIndex(move => move.name === selectedVariant.name);
+                    
+                    if (index !== -1) {
+                        setSelectedVariant(filteredMoves[index]);
+                        setSelectedMoveIndex(index);
+                    } else {
+                        setSelectedVariant(null);
+                        setSelectedMoveIndex(-1);
+                    }
+                }
+            }
+
             if(filteredMoves.length === 0) {
                 setNoMoreMoves(true);
             } else {
@@ -281,9 +320,15 @@ export function LearningPage() {
         }
     }
 
-    const handleForward = (index) => {
-        if (index !== -1 && nextMoves[index]) {
-            const move = nextMoves[index].move;
+    const handleSelectedMove = (index) => {
+        setSelectedMoveIndex(index);
+        setSelectedVariant(nextMoves[index]);
+        handleForward();
+    }
+
+    const handleForward = () => {
+        if (selectedMoveIndex !== -1 && nextMoves[selectedMoveIndex]) {
+            const move = nextMoves[selectedMoveIndex].move;
 
             const newGame = new Chess();
             moveHistory.forEach(m => newGame.move(m, { sloppy: true }));
@@ -336,10 +381,6 @@ export function LearningPage() {
                 />}
             </ChessBoardContainer>
             <ControlContainer>
-                {moveHistory.length !== 0 && <IconButton onClick={handleBack} aria-label="Zurück" style={{ alignSelf: 'flex-start', marginBottom: '8px' }}>
-                    <ArrowBackIcon />
-                </IconButton>}
-
                 {noMoreMoves && (
                     <OpeningEndContainer>
                         <StyledText>Die Eröffnungsvariante ist zu Ende. Möchtest du sie nun üben?</StyledText>
@@ -356,13 +397,33 @@ export function LearningPage() {
                             .map((moveData, index) => (
                                 <MoveItem
                                     key={index}
-                                    onClick={() => handleForward(index)}
+                                    selected={index === selectedMoveIndex}
+                                    onClick={() => handleSelectedMove(index)}
                                 >
                                     <strong>{moveData.move}</strong> - {moveData.name}
                                 </MoveItem>
                             ))}
                     </ScrollableMoveList>
                 </MoveScrollContainer>
+
+                { selectedVariant && <VariantContainer>
+                    <Separator/>
+                    <StyledText>
+                        <strong>Variante:</strong> {selectedVariant.name}
+                    </StyledText>
+                    <StyledText>
+                        <strong>Zug:</strong> {selectedVariant.move}
+                    </StyledText>
+                </VariantContainer>}
+
+                <ButtonContainer>
+                    <IconButton onClick={handleBack} aria-label="Zurück">
+                        <ArrowBackIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleForward()}>
+                        <ArrowForwardIcon />
+                    </IconButton>
+                </ButtonContainer>
             </ControlContainer>
             <OpeningContainer>
                 <StyledOpeningsContainer style={{ height: selectedOpening === -1 ? '100%' : null }}>
