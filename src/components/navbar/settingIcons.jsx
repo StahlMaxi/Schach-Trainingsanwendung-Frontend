@@ -4,8 +4,9 @@ import { useTheme } from "../../theme/themeContext";
 import IconButton from '@mui/material/IconButton';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
-import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate } from "react-router-dom";
+import LoginIcon from '@mui/icons-material/Login';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 const SettingsIconContainer = styled.div`
     display: flex;
@@ -19,21 +20,21 @@ const SettingButton = styled(IconButton)`
     }
 `;
 
-export function SettingIcons() {
+export function SettingIcons({ isLoggedIn, handleLogOut }) {
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
 
-    const handleSettingsClick = () => {
-        navigate("/settings");
-    };
+    const handleLogIn = () => {
+        navigate("/login");
+    }
 
     return(
         <SettingsIconContainer>
             <SettingButton onClick={toggleTheme}>
                 {theme.name === 'dark' ? <LightModeIcon/> : <DarkModeIcon/>}
             </SettingButton>
-            <SettingButton onClick={handleSettingsClick}>
-                <SettingsIcon/>
+            <SettingButton onClick={isLoggedIn ? handleLogOut : handleLogIn}>
+                {isLoggedIn ? <LogoutIcon/> : <LoginIcon/>}
             </SettingButton>
         </SettingsIconContainer>
     );

@@ -79,7 +79,7 @@ const StyledLink = styled(Link)`
     color: ${(props) => props.theme.colors.text};
 `;
 
-export function LoginPage({ setLoggedIn }) {
+export function LoginPage({ setLoggedIn, setUser }) {
     const [userName, setUserName] = useState("");
     const [password, setPassword] = useState("");
     const [showPwText, setShowPwText] = useState(false);
@@ -113,6 +113,7 @@ export function LoginPage({ setLoggedIn }) {
         try {
             await login({ name: userName, password });
             setLoggedIn(true);
+            setUser(userName);
             setUserName("");
             setPassword("");
             navigate("/");
