@@ -11,7 +11,9 @@ export async function register(userData) {
     });
 
     if (!response.ok) {
-      throw new Error('Nutzername bereits vorhanden');
+      const error = new Error("Registrierung fehlgeschlagen");
+      error.status = response.status;
+      throw error;
     }
   } catch (error) {
     throw error;
@@ -29,7 +31,9 @@ export async function login(credentials) {
     });
 
     if (!response.ok) {
-      throw new Error('Login Fehler');
+      const error = new Error("Login fehlgeschlagen");
+      error.status = response.status;
+      throw error;
     }
 
     const data = await response.json();
