@@ -41,7 +41,7 @@ const StyledH3 = styled.h3`
     color: ${(props) => props.theme.colors.text};
     font-weight: ${(props) => props.theme.typography.h3.fontWeight};
     font-size: ${(props) => props.theme.typography.h3.fontSize};
-    margin-left: 15px; /* Abstand zwischen den Icons und dem Namen */
+    margin-left: 15px;
 `;
 
 export function NavBar({ setNavBarOpen, isLoggedIn, userName, handleLogOut }) {

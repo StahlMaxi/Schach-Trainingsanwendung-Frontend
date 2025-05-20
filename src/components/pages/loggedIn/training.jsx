@@ -4,6 +4,7 @@ import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { useTheme } from "../../../theme/themeContext";
 import { TextField, IconButton, Button } from "@mui/material";
+import { useParams } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -134,6 +135,8 @@ const Separator = styled.div`
 export function TrainingPage() {
     const theme = useTheme();
 
+    const { openingID, variantName } = useParams();
+
     const [boardWidth, setBoardWith] = useState(0);
     const [game, setGame] = useState(new Chess());
     const [fen, setFen] = useState("start");
@@ -190,6 +193,15 @@ export function TrainingPage() {
         try {
             const data = await getOpenings();
             setOpenings(data);
+
+            if (openingID) {
+                const opening = data.find(opening => opening.id === openingID);
+                if (opening) {
+                    setOpeningSearch(opening.name);
+                    setSelectedOpening(openingID);
+                    getVariantsRequest(openingID);
+                }
+            }
         } catch (error) {
             console.error('Fehler bei der Abfrage der Eröffnungen:', error);
         }
@@ -229,6 +241,14 @@ export function TrainingPage() {
         try {
             const data = await getVariants(openingId);
             setVariants(data);
+
+            if (variantName) {
+                const variant = data.find(variant => variant.name === variantName);
+                if (variant) {
+                    setVariantSearch(variantName);
+                    setSelectedVariant(variant.id);
+                }
+            }
         } catch (error) {
             console.error('Fehler bei der Abfrage der Eröffnungen:', error);
         }

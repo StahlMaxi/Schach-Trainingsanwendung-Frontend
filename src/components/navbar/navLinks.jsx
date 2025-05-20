@@ -55,7 +55,7 @@ export function NavLinks() {
             <LinkItem active={pathname === "/learn"}>
                 <StyledLink to="/learn">Lernen</StyledLink>
             </LinkItem>
-            <LinkItem active={pathname === "/train"}>
+            <LinkItem active={/^\/train/.test(pathname)}>
                 <StyledLink to="/train">Training</StyledLink>
             </LinkItem>
         </LinksWrapper>

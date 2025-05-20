@@ -8,6 +8,7 @@ import { useTheme } from "../../../theme/themeContext";
 import { Link } from "react-router-dom";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CachedIcon from '@mui/icons-material/Cached';
 
 import { getOpenings } from "../../../services/openingService";
 import { getNextOpeningMoves } from "../../../services/openingService";
@@ -38,6 +39,10 @@ const ControlContainer = styled.div`
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     background-color: ${(props) => props.theme.colors.card};
     margin-right: 20px;
+`;
+
+const StyledH3 = styled.h3`
+    text-align: center;
 `;
 
 const OpeningEndContainer = styled.div`
@@ -205,6 +210,7 @@ export function LearningPage() {
     const [boardWidth, setBoardWith] = useState(0);
     const [game, setGame] = useState(new Chess());
     const [fen, setFen] = useState("start");
+    const [isBoardFlipped, setIsBoardFlipped] = useState(false);
 
     const [openings, setOpenings] = useState([]);
     const [search, setSearch] = useState("");
@@ -323,7 +329,6 @@ export function LearningPage() {
     const handleSelectedMove = (index) => {
         setSelectedMoveIndex(index);
         setSelectedVariant(nextMoves[index]);
-        handleForward();
     }
 
     const handleForward = () => {
@@ -369,6 +374,9 @@ export function LearningPage() {
         }
     };
 
+    const handleFlipBoard = () => {
+        setIsBoardFlipped(prevState => !prevState);
+    };
 
     return (
         <PageContainer>
@@ -378,13 +386,16 @@ export function LearningPage() {
                     position={fen}
                     boardWidth={boardWidth}
                     arePiecesDraggable={false}
+                    boardOrientation={isBoardFlipped ? 'black' : 'white'}
                 />}
             </ChessBoardContainer>
             <ControlContainer>
+                {selectedOpening === -1 && <StyledH3>Eröffnung auswählen</StyledH3>}
+                {selectedOpening !== -1 && <StyledH3>Nächsten Zug auswählen</StyledH3>}
                 {noMoreMoves && (
                     <OpeningEndContainer>
                         <StyledText>Die Eröffnungsvariante ist zu Ende. Möchtest du sie nun üben?</StyledText>
-                        <Link to="/train">
+                        <Link to={`/train/${selectedOpening}/${selectedVariant.name}`}>
                             <BackButton sx={buttonColor} variant="contained">Üben</BackButton>
                         </Link>
                     </OpeningEndContainer>
@@ -417,8 +428,11 @@ export function LearningPage() {
                 </VariantContainer>}
 
                 <ButtonContainer>
-                    <IconButton onClick={handleBack} aria-label="Zurück">
+                    <IconButton onClick={handleBack}>
                         <ArrowBackIcon />
+                    </IconButton>
+                    <IconButton onClick={handleFlipBoard}>
+                        <CachedIcon />
                     </IconButton>
                     <IconButton onClick={() => handleForward()}>
                         <ArrowForwardIcon />
