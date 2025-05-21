@@ -34,9 +34,17 @@ const MiddleSection = styled.div`
 const RightSection = styled.div`
     display: flex;
     padding-right: 20px;
+    align-items: center;
 `;
 
-export function NavBar({ setNavBarOpen }) {
+const StyledH3 = styled.h3`
+    color: ${(props) => props.theme.colors.text};
+    font-weight: ${(props) => props.theme.typography.h3.fontWeight};
+    font-size: ${(props) => props.theme.typography.h3.fontSize};
+    margin-left: 15px;
+`;
+
+export function NavBar({ setNavBarOpen, isLoggedIn, userName, handleLogOut }) {
     const { theme } = useTheme();
     const isMobile = useMediaQuery({ maxWidth: DeviceSize.mobile });
 
@@ -48,7 +56,8 @@ export function NavBar({ setNavBarOpen }) {
             {!isMobile && <NavLinks/>}
         </MiddleSection>
         <RightSection>
-            {!isMobile && <SettingIcons/>}
+            {!isMobile && <SettingIcons isLoggedIn={isLoggedIn} handleLogOut={handleLogOut}/>}
+            {!isMobile && <StyledH3>{userName}</StyledH3>}
             {isMobile && <MobileNavLinks setNavBarOpen={setNavBarOpen}/>}
         </RightSection>
     </NavBarContainer>

@@ -1,11 +1,35 @@
 const REACT_APP_BACKEND_API_BASE_URL = process.env.REACT_APP_BACKEND_API_BASE_URL;
 
+function getToken() {
+  const tokenData = localStorage.getItem('token');
+
+  if (!tokenData) {
+    const error = new Error("Kein Token vorhanden");
+    error.status = 401;
+    throw error;
+  }
+
+  try {
+    const parsed = JSON.parse(tokenData);
+
+    if (new Date().getTime() > parsed.expiry) {
+      localStorage.removeItem('token');
+      const error = new Error("Token ist abgelaufen");
+      error.status = 401;
+      throw error;
+    }
+
+    return parsed.value;
+  } catch (e) {
+    const error = new Error("Token konnte nicht gelesen werden");
+    error.status = 401;
+    throw error;
+  }
+}
+
 export async function getOpenings() {
   try {
-    const tokenData = localStorage.getItem('token');
-
-    const parsedTokenData = JSON.parse(tokenData);
-    const token = parsedTokenData.value;
+    const token = getToken();
 
     const response = await fetch(`${REACT_APP_BACKEND_API_BASE_URL}/openings`, {
       method: 'GET',
@@ -16,7 +40,9 @@ export async function getOpenings() {
     });
 
     if (!response.ok) {
-      throw new Error('Keine Erlaubnis für diese API');
+      const error = new Error("Eröffnungsabfrage fehlgeschlagen");
+      error.status = response.status;
+      throw error;
     }
 
     const data = await response.json();
@@ -28,10 +54,7 @@ export async function getOpenings() {
 
 export async function getVariants(id) {
   try {
-    const tokenData = localStorage.getItem('token');
-
-    const parsedTokenData = JSON.parse(tokenData);
-    const token = parsedTokenData.value;
+    const token = getToken();
 
     const response = await fetch(`${REACT_APP_BACKEND_API_BASE_URL}/openings/${id}/variants`, {
       method: 'GET',
@@ -42,7 +65,9 @@ export async function getVariants(id) {
     });
 
     if (!response.ok) {
-      throw new Error('Keine Erlaubnis für diese API');
+      const error = new Error("Variantenabfrage fehlgeschlagen");
+      error.status = response.status;
+      throw error;
     }
 
     const data = await response.json();
@@ -54,9 +79,7 @@ export async function getVariants(id) {
 
 export async function getNextOpeningMoves({ id, played }) {
   try {
-    const tokenData = localStorage.getItem('token');
-    const parsedTokenData = JSON.parse(tokenData);
-    const token = parsedTokenData.value;
+    const token = getToken();
 
     const playedParam = played ? `played=${encodeURIComponent(played)}` : '';
     const url = `${REACT_APP_BACKEND_API_BASE_URL}/openings/${id}/variants/next-moves${playedParam ? `?${playedParam}` : ''}`;
@@ -70,7 +93,9 @@ export async function getNextOpeningMoves({ id, played }) {
     });
 
     if (!response.ok) {
-      throw new Error('Keine Erlaubnis für diese API');
+      const error = new Error("Next-Move-Abfrage fehlgeschlagen");
+      error.status = response.status;
+      throw error;
     }
 
     const data = await response.json();
@@ -82,9 +107,7 @@ export async function getNextOpeningMoves({ id, played }) {
 
 export async function getNextVariantMove({ id, played }) {
   try {
-    const tokenData = localStorage.getItem('token');
-    const parsedTokenData = JSON.parse(tokenData);
-    const token = parsedTokenData.value;
+    const token = getToken();
 
     const playedParam = played ? `played=${encodeURIComponent(played)}` : '';
     const url = `${REACT_APP_BACKEND_API_BASE_URL}/openings/${id}/next-move${playedParam ? `?${playedParam}` : ''}`;
@@ -98,7 +121,9 @@ export async function getNextVariantMove({ id, played }) {
     });
 
     if (!response.ok) {
-      throw new Error('Keine Erlaubnis für diese API');
+      const error = new Error("Next-Moves-Abfrage fehlgeschlagen");
+      error.status = response.status;
+      throw error;
     }
 
     const data = await response.json();

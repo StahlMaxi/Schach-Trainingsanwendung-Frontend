@@ -9,6 +9,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
 import styled from "styled-components";
 import { Button } from "@mui/material";
 import ChessBackground from "../../assets/chessBackground.jpg";
@@ -34,6 +35,14 @@ const FieldWrapper = styled.div`
     align-items: center;
     padding: 20px;
     background-color: ${(props) => props.theme.colors.navbar}; 
+`;
+
+const StyledForm = styled.form`
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    justify-content: center;
+    align-items: center;
 `;
 
 const TextFieldWrapper = styled.div`
@@ -66,115 +75,135 @@ export function RegistrationPage() {
     const [showPwText, setShowPwText] = useState(false);
     const [showConfText, setShowConfText] = useState(false);
 
-    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
     const navigate = useNavigate();
 
-    const handleClickShowPassword = () => setShowPwText((show) => !show);
-    const handleClickShowConfirmation = () => setShowConfText((show) => !show);
-
-    const handleMouseDownPassword = (event) => {
-        event.preventDefault();
-    };
-
-    const handleMouseUpPassword = (event) => {
-        event.preventDefault();
-    };
-
     const handleCloseSnackbar = (_, reason) => {
-        if (reason === 'clickaway') return;
-        setOpenSnackbar(false);
-      };
+        if (reason === "clickaway") return;
+        setSnackbarOpen(false);
+    };
+
+    const showSnackbar = (message, severity = "success") => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    };
 
     async function registerButtonPressed() {
-        if(password === passwordConfirmation) {
-            try {
-                await register({ name: userName, password: password });
-                setUserName("");
-                setPassword("");
-                setPasswordConfirmation("");
-                setOpenSnackbar(true);
-                setTimeout(() => navigate("/login"), 2000);
-              } catch (error) {
-                console.error('Fehler bei der Registrierung:', error);
-              }
-        } else {
+        if (!userName.trim() || !password.trim() || !passwordConfirmation.trim()) {
+            showSnackbar("Bitte alle Felder ausfüllen.", "warning");
+            return;
+        }
 
+        if (password !== passwordConfirmation) {
+            showSnackbar("Passwörter stimmen nicht überein.", "warning");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await register({ name: userName, password });
+            setUserName("");
+            setPassword("");
+            setPasswordConfirmation("");
+            showSnackbar("Registrierung erfolgreich!", "success");
+            setTimeout(() => navigate("/login"), 500);
+        } catch (error) {
+            let message;
+            if (error.status === 409) {
+                message = "Nutzername bereits vergeben.";
+            } else {
+                message = "Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.";
+            }
+            showSnackbar(message, "error");
+        } finally {
+            setLoading(false);
         }
     }
 
-    return(
+    return (
         <Content>
             <FieldWrapper>
-                <TextFieldWrapper>
-                    <StyledTextfield id="standard-basic" value={userName} onChange={(e) => setUserName(e.target.value)} label="Nutzername" variant="standard"/>
-                </TextFieldWrapper>
-                <PasswordWrapper>
-                    <StyledFormControl variant="standard">
-                        <InputLabel htmlFor="standard-adornment-password">Password</InputLabel>
-                        <Input
-                            id="standard-adornment-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            type={showPwText ? 'text' : 'password'}
-                            endAdornment={
-                                <InputAdornment position="end">
-                                    <IconButton
-                                        sx={{ fontSize: '1.0rem' }}
-                                        aria-label={showPwText ? 'hide the password' : 'display the password'}
-                                        onClick={handleClickShowPassword}
-                                        onMouseDown={handleMouseDownPassword}
-                                        onMouseUp={handleMouseUpPassword}
-                                    >
-                                        {showPwText ? (
-                                            <Visibility sx={{ fontSize: '1.5rem' }} />
-                                        ) : (
-                                            <VisibilityOff sx={{ fontSize: '1.5rem' }} />
-                                        )}
-                                    </IconButton>
-                                </InputAdornment>
-                            }
+                <StyledForm onSubmit={(e) => { e.preventDefault(); registerButtonPressed(); }}>
+                    <TextFieldWrapper>
+                        <StyledTextfield
+                            label="Nutzername"
+                            variant="standard"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            disabled={loading}
+                            autoComplete="username"
                         />
-                    </StyledFormControl>
-                </PasswordWrapper>
-                <PasswordWrapper>
-                    <StyledFormControl variant="standard">
-                        <InputLabel htmlFor="standard-adornment-password">Password Bestätigung</InputLabel>
-                        <Input
-                            id="standard-adornment-password"
-                            value={passwordConfirmation}
-                            onChange={(e) => setPasswordConfirmation(e.target.value)}
-                            type={showConfText ? 'text' : 'password'}
-                            endAdornment={
-                                <InputAdornment position="end">
-                                    <IconButton
-                                        sx={{ fontSize: '1.0rem' }}
-                                        aria-label={showConfText ? 'hide the password' : 'display the password'}
-                                        onClick={handleClickShowConfirmation}
-                                        onMouseDown={handleMouseDownPassword}
-                                        onMouseUp={handleMouseUpPassword}
-                                    >
-                                        {showConfText ? (
-                                            <Visibility sx={{ fontSize: '1.5rem' }} />
-                                        ) : (
-                                            <VisibilityOff sx={{ fontSize: '1.5rem' }} />
-                                        )}
-                                    </IconButton>
-                                </InputAdornment>
-                            }
-                        />
-                    </StyledFormControl>
-                </PasswordWrapper>
-                <StyledButton variant="contained" onClick={registerButtonPressed}>Registrieren</StyledButton>
+                    </TextFieldWrapper>
+                    <PasswordWrapper>
+                        <StyledFormControl variant="standard">
+                            <InputLabel htmlFor="password">Password</InputLabel>
+                            <Input
+                                id="password"
+                                type={showPwText ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                disabled={loading}
+                                autoComplete="new-password"
+                                endAdornment={
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={() => setShowPwText(!showPwText)}
+                                            onMouseDown={(e) => e.preventDefault()}
+                                        >
+                                            {showPwText ? <Visibility /> : <VisibilityOff />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                }
+                            />
+                        </StyledFormControl>
+                    </PasswordWrapper>
+                    <PasswordWrapper>
+                        <StyledFormControl variant="standard">
+                            <InputLabel htmlFor="passwordConfirmation">Password Bestätigung</InputLabel>
+                            <Input
+                                id="passwordConfirmation"
+                                type={showConfText ? "text" : "password"}
+                                value={passwordConfirmation}
+                                onChange={(e) => setPasswordConfirmation(e.target.value)}
+                                disabled={loading}
+                                autoComplete="new-password"
+                                endAdornment={
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={() => setShowConfText(!showConfText)}
+                                            onMouseDown={(e) => e.preventDefault()}
+                                        >
+                                            {showConfText ? <Visibility /> : <VisibilityOff />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                }
+                            />
+                        </StyledFormControl>
+                    </PasswordWrapper>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        {loading ? (
+                            <CircularProgress />
+                        ) : (
+                            <StyledButton variant="contained" type="submit">
+                                Registrieren
+                            </StyledButton>
+                        )}
+                    </div>
+                </StyledForm>
             </FieldWrapper>
             <Snackbar
-                open={openSnackbar}
-                autoHideDuration={3000}
+                open={snackbarOpen}
+                autoHideDuration={4000}
                 onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                >
-                <MuiAlert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-                    Registrierung erfolgreich!
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            >
+                <MuiAlert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: "100%" }}>
+                    {snackbarMessage}
                 </MuiAlert>
             </Snackbar>
         </Content>

@@ -7,7 +7,6 @@ import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { HomePage } from './components/pages/loggedIn/home';
 import { LearningPage } from './components/pages/loggedIn/learning';
 import { TrainingPage } from './components/pages/loggedIn/training';
-import { SettingPage } from './components/pages/loggedIn/settings';
 import { HomePageLO } from './components/pages/loggedOut/homeLO';
 import { LoginPage } from './components/pages/login';
 import { RegistrationPage } from './components/pages/registration';
@@ -26,6 +25,8 @@ const Content = styled.div`
 
 function App() {
   const { theme } = useTheme();
+
+  const [userName, setUserName] = useState("");
 
   const [isLoggedIn, setLoggedIn] = useState(false);
 
@@ -46,21 +47,27 @@ function App() {
       localStorage.removeItem('token');
       return;
     }
+    
     setLoggedIn(true);
-    navigate("/");
+  }
+
+  const handleLogOut = () => {
+    setLoggedIn(false);
+    setUserName("");
+    localStorage.removeItem("token");
+    navigate("/login");
   }
 
   return (
     <AppContainer theme={theme}>
-      <NavBar setNavBarOpen={setNavBarOpen}/>
+      <NavBar setNavBarOpen={setNavBarOpen} isLoggedIn={isLoggedIn} userName={userName} handleLogOut={handleLogOut}/>
       {!navBarOpen && <Content>
         <Routes>
           <Route path="/" element={isLoggedIn ? <HomePage/> : <HomePageLO/>}/>
-          <Route path="/learn" element={isLoggedIn ? <LearningPage/> : <LearningPageLO/>}/>
-          <Route path="/train" element={isLoggedIn ? <TrainingPage/> : <TrainingPageLO/>}/>
-          <Route path="/settings" element={isLoggedIn ? <SettingPage setLoggedIn={setLoggedIn}/> : <Navigate to="/login"/>}/>
-          <Route path="/login" element={<LoginPage setLoggedIn={setLoggedIn}/>}/>
-          <Route path="/register" element={<RegistrationPage/>}/>
+          <Route path="/learn" element={isLoggedIn ? <LearningPage handleLogOut={handleLogOut}/> : <LearningPageLO/>}/>
+          <Route path="/train/:openingID?/:variantName?" element={isLoggedIn ? <TrainingPage handleLogOut={handleLogOut}/> : <TrainingPageLO />}/>
+          <Route path="/login" element={!isLoggedIn ? <LoginPage setLoggedIn={setLoggedIn} setUser={setUserName}/> : null}/>
+          <Route path="/register" element={!isLoggedIn ? <RegistrationPage/> : null}/>
           <Route path="*" element={<Navigate to="/"/>}></Route>
         </Routes>
       </Content>}

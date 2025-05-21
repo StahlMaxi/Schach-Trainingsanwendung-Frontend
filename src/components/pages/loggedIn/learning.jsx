@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect, useState, useCallback } from "react";
 import styled from "styled-components";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
@@ -6,23 +6,69 @@ import { Button, TextField, IconButton } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useTheme } from "../../../theme/themeContext";
 import { Link } from "react-router-dom";
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CachedIcon from '@mui/icons-material/Cached';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import { DeviceSize } from "../../responsive";
 
 import { getOpenings } from "../../../services/openingService";
 import { getNextOpeningMoves } from "../../../services/openingService";
 
 const PageContainer = styled.div`
-    height: calc(100vh - 60px); 
     display: flex;
     flex-direction: row;
     background-color: ${(props) => props.theme.colors.background};
     padding: 50px;
+
+    @media (min-width: ${DeviceSize.laptop}px) {
+        height: calc(100vh - 60px); 
+    }
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
 `;
 
 //Schachbrett
+//Padding Left for horizontal positioning
 const ChessBoardContainer = styled.div`
     width: 60%;
+    margin-right: 50px;
     padding-left: 150px;
+
+    @media (max-width: 1700px) {
+        padding-left: 100px;
+    }
+
+    @media (max-width: 1500px) {
+        padding-left: 50px;
+    }
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        order: 1;
+        width: 60%;
+        padding-left: 0px;
+    }
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        order: 1;
+        width: 100%;
+        height: 50%;
+        margin-right: 0px;
+        margin-bottom: 20px;
+        padding-left: 200px;
+    }
+
+    @media (max-width: 800px) {
+        padding-left: 100px;;
+    }
+
+    @media (max-width: 700px) {
+        padding-left: 0px;;
+    }
 `;
 
 //Varianten auswählen
@@ -37,6 +83,25 @@ const ControlContainer = styled.div`
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     background-color: ${(props) => props.theme.colors.card};
     margin-right: 20px;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        order: 2;
+        flex: 1;
+        height: ${({ $boardHeight }) => `${$boardHeight}px`};
+        margin-right: 0px;
+    }
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        height: auto;
+    }
+`;
+
+const StyledH3 = styled.h3`
+    text-align: center;
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        order: 3;
+    }
 `;
 
 const OpeningEndContainer = styled.div`
@@ -51,6 +116,10 @@ const OpeningEndContainer = styled.div`
     text-align: center;
     margin-top: 20px;
     background-color: ${(props) => props.theme.colors.hover};
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        order: 2;
+    }
 `;
 
 const StyledText = styled.div`
@@ -68,6 +137,12 @@ const MoveScrollContainer = styled.div`
     flex-grow: 1;
     overflow-y: auto;
     padding: 10px;
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        max-height: 300px;
+        order: 5;
+        margin-top: 10px;
+    }
 `;
 
 const ScrollableMoveList = styled.div`
@@ -92,6 +167,32 @@ const MoveItem = styled.div`
     }
 `;
 
+const VariantContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        order: 3;
+    }
+`;
+
+const Separator = styled.hr`
+    margin: 20px 0;
+    border: 0;
+    border-top: 1px solid #000;
+`;
+
+const ButtonContainer = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        order: 1;
+    }
+`;
+
 //Eröffnungen
 const OpeningContainer = styled.div`
     width: 20%;
@@ -100,7 +201,18 @@ const OpeningContainer = styled.div`
     flex-direction: column;
     gap: 20px;
     align-self: flex-end;
-    margin-left: auto;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        order: 3;
+        width: 100%;
+        flex-direction: row;
+        margin-top: 20px;
+    }
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        width: 100%;
+        flex-direction: column;
+    }
 `;
 
 const StyledOpeningsContainer = styled.div`
@@ -111,6 +223,16 @@ const StyledOpeningsContainer = styled.div`
     flex-direction: column;
     gap: 20px;
     background-color: ${(props) => props.theme.colors.card};
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        max-height: 300px;
+        width: 50%;
+    }
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        max-height: 300px;
+        width: 100%;
+    }
 `;
 
 const StyledTextFieldWrapper = styled.div`
@@ -153,6 +275,10 @@ const InformationContainer = styled.div`
     display: flex;
     flex-direction: column;
     gap: 20px;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        flex: 1;
+    }
 `;
 
 const StyledPlayedMovesContainer = styled.div`
@@ -180,61 +306,92 @@ const MovesPlayedText = styled.div`
     text-align: center;
 `;
 
-export function LearningPage() {
+export function LearningPage({ handleLogOut }) {
     const theme = useTheme();
 
     const [boardWidth, setBoardWith] = useState(0);
-    const [game, setGame] = useState(new Chess());
     const [fen, setFen] = useState("start");
+    const [isBoardFlipped, setIsBoardFlipped] = useState(false);
 
     const [openings, setOpenings] = useState([]);
     const [search, setSearch] = useState("");
     const [selectedOpening, setSelectedOpening] = useState(-1);
 
     const [nextMoves, setNextMoves] = useState([]);
+    const [selectedMoveIndex, setSelectedMoveIndex] = useState(-1);
+    const [selectedVariant, setSelectedVariant] = useState(null);
     const [playedMoves, setPlayedMoves] = useState("");
-    const [noMoreMoves, setNoMoreMoves] = useState(false);
+
+    const [variantEnd, setVariantEnd] = useState(false);
+    const [endedVariant, setEndedVariant] = useState(null);
 
     const [moveHistory, setMoveHistory] = useState([]);
+
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [snackbarSeverity, setSnackbarSeverity] = useState("error");
 
     const buttonColor = {
         backgroundColor: theme.theme.colors.backgroundCounter,
         color: theme.theme.colors.textCounter,
     };
 
-    useLayoutEffect(() => {
-        const tokenCorrect = checkValidToken();
-        if (tokenCorrect) {
-            getOpeningsRequest();
-        }
-
-        const divElement = document.getElementById('boardDiv');
-        if (divElement) {
-            const divWidth = divElement.offsetWidth;
-            setBoardWith(divWidth * 0.7);
-        }
-    }, []);
-
-    function checkValidToken() {
-        const itemStr = localStorage.getItem('token');
-        if (!itemStr) return false;
-      
-        const item = JSON.parse(itemStr);
-        if (new Date().getTime() > item.expiry) {
-          localStorage.removeItem('token');
-          return false;
-        }
-        return true;
-    }
-
-    async function getOpeningsRequest() {
+    const getOpeningsRequest = useCallback(async () => {
         try {
             const data = await getOpenings();
             setOpenings(data);
         } catch (error) {
-            console.error('Fehler bei der Abfrage der Eröffnungen:', error);
+            let message;
+            if (error.status === 401) {
+                message = "Sie sind nicht autorisiert für diesen Endpunkt.";
+                handleLogOut();
+            } else {
+                message = "Fehler beim Abruf der Eröffnungen.";
+            }
+            showSnackbar(message, "error");
         }
-    }
+    }, [handleLogOut]);
+
+    useLayoutEffect(() => {
+        const updateBoardSize = () => {
+            const divElement = document.getElementById("boardDiv");
+            if (divElement) {
+                const isTabletOrSmaller = window.innerWidth <= DeviceSize.tablet;
+                const divWidth = divElement.offsetWidth;
+
+                if(isTabletOrSmaller) {
+                    const size = isTabletOrSmaller
+                        ? Math.min(divWidth, window.innerHeight * 0.5)
+                        : divWidth;
+
+                    setBoardWith(size);
+                } else {
+                    const availableHeight = window.innerHeight - 150; 
+                    const maxSize = Math.min(divWidth, availableHeight);
+
+                    setBoardWith(maxSize);
+                }
+            }
+        };
+
+        updateBoardSize();
+
+        getOpeningsRequest();
+
+        window.addEventListener("resize", updateBoardSize);
+
+        return () => {
+            window.removeEventListener("resize", updateBoardSize);
+        };
+    }, [getOpeningsRequest]);
+
+    const showSnackbar = (message, severity = "error") => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    };
+
+    const handleSnackbarClose = () => setSnackbarOpen(false);
 
     const filteredOpenings = openings.filter(opening => {
         const lowerSearch = search.toLowerCase();
@@ -255,8 +412,6 @@ export function LearningPage() {
 
     const resetSelectedOpening = () => {
         const freshGame = new Chess();
-
-        setGame(freshGame);
         setFen(freshGame.fen());
 
         setSearch('');
@@ -264,26 +419,64 @@ export function LearningPage() {
         setNextMoves([]);
         setPlayedMoves("");
         setMoveHistory([]);
+        setVariantEnd(false);
+        setSelectedVariant(null);
+        setSelectedMoveIndex(-1);
     };
 
     async function getNextOpeningMovesRequest(id, played = "") {
         try {
             const data = await getNextOpeningMoves({ id, played });
             const filteredMoves = data.filter(move => move.move && move.move.trim() !== "");
-            if(filteredMoves.length === 0) {
-                setNoMoreMoves(true);
-            } else {
-                setNoMoreMoves(false);
+
+            setVariantEnd(false);
+
+            if(selectedVariant) {
+                const index = filteredMoves.findIndex(move => move.name === selectedVariant.name);
+                
+                if (index !== -1) {
+                    setSelectedVariant(filteredMoves[index]);
+                    setSelectedMoveIndex(index);
+                } else {
+                    setVariantEnd(true);
+                    setEndedVariant(selectedVariant);
+                    setSelectedVariant(null);
+                    setSelectedMoveIndex(-1);
+                }
+            } else if(endedVariant) {
+                const indexEndedVariant = filteredMoves.findIndex(move => move.name === endedVariant.name);
+                
+                if(indexEndedVariant !== -1) {
+                    setSelectedMoveIndex(indexEndedVariant);
+                    setSelectedVariant(endedVariant);
+                    setEndedVariant(null);
+                }
             }
+
             setNextMoves(filteredMoves);
         } catch (error) {
-            console.error('Fehler bei der Abfrage der nächsten Züge:', error);
+            let message;
+            if(error.status === 400) {
+                message = "Das Played-Parameter ist nicht korrekt formatiert";
+            } else if(error.status === 401) {
+                message = "Sie sind nicht autorisiert für diesen Endpunkt.";
+                handleLogOut();
+            } else {
+                message = "Fehler beim Abruf der Eröffnungen.";
+            }
+            showSnackbar(message, "error");
         }
     }
 
-    const handleForward = (index) => {
-        if (index !== -1 && nextMoves[index]) {
-            const move = nextMoves[index].move;
+    const handleSelectedMove = (index) => {
+        setSelectedMoveIndex(index);
+        setSelectedVariant(nextMoves[index]);
+    }
+
+    const handleForward = () => {
+        if (selectedMoveIndex !== -1 && nextMoves[selectedMoveIndex]) {
+
+            const move = nextMoves[selectedMoveIndex].move;
 
             const newGame = new Chess();
             moveHistory.forEach(m => newGame.move(m, { sloppy: true }));
@@ -293,14 +486,13 @@ export function LearningPage() {
             if (result) {
                 const newPlayedMoves = playedMoves ? `${playedMoves} ${move}` : move;
 
-                setGame(newGame);
                 setFen(newGame.fen());
                 setPlayedMoves(newPlayedMoves);
                 setMoveHistory(prev => [...prev, move]);
 
                 getNextOpeningMovesRequest(selectedOpening, newPlayedMoves);
             } else {
-                console.warn("Ungültiger Zug:", move);
+                showSnackbar("Ungültiger Zug: " + move, "error");
             }
         }
     };
@@ -317,13 +509,15 @@ export function LearningPage() {
             const newGame = new Chess();
             newHistory.forEach(move => newGame.move(move, { sloppy: true }));
 
-            setGame(newGame);
             setFen(newGame.fen());
 
             getNextOpeningMovesRequest(selectedOpening, newPlayedMoves);
         }
     };
 
+    const handleFlipBoard = () => {
+        setIsBoardFlipped(prevState => !prevState);
+    };
 
     return (
         <PageContainer>
@@ -333,21 +527,24 @@ export function LearningPage() {
                     position={fen}
                     boardWidth={boardWidth}
                     arePiecesDraggable={false}
+                    boardOrientation={isBoardFlipped ? 'black' : 'white'}
                 />}
             </ChessBoardContainer>
-            <ControlContainer>
-                {moveHistory.length !== 0 && <IconButton onClick={handleBack} aria-label="Zurück" style={{ alignSelf: 'flex-start', marginBottom: '8px' }}>
-                    <ArrowBackIcon />
-                </IconButton>}
-
-                {noMoreMoves && (
+            <ControlContainer $boardHeight={boardWidth}>
+                {variantEnd && (
                     <OpeningEndContainer>
-                        <StyledText>Die Eröffnungsvariante ist zu Ende. Möchtest du sie nun üben?</StyledText>
-                        <Link to="/train">
+                        <StyledText>
+                            Die Eröffnungsvariante <strong>{endedVariant.name}</strong> ist zu Ende. Möchtest du sie nun üben?
+                        </StyledText>
+                        <Link to={`/train/${selectedOpening}/${endedVariant.name}`}>
                             <BackButton sx={buttonColor} variant="contained">Üben</BackButton>
                         </Link>
                     </OpeningEndContainer>
                 )}
+
+                {selectedOpening === -1 && <StyledH3>Eröffnung auswählen</StyledH3>}
+                {selectedOpening !== -1 && !variantEnd && <StyledH3>Nächsten Zug auswählen</StyledH3>}
+                {selectedOpening !== -1 && variantEnd && nextMoves.length !== 0 && <StyledH3>Oder Nächsten Zug auswählen</StyledH3>}
 
                 <MoveScrollContainer>
                     <ScrollableMoveList>
@@ -356,16 +553,39 @@ export function LearningPage() {
                             .map((moveData, index) => (
                                 <MoveItem
                                     key={index}
-                                    onClick={() => handleForward(index)}
+                                    selected={index === selectedMoveIndex}
+                                    onClick={() => handleSelectedMove(index)}
                                 >
                                     <strong>{moveData.move}</strong> - {moveData.name}
                                 </MoveItem>
                             ))}
                     </ScrollableMoveList>
                 </MoveScrollContainer>
+
+                { selectedVariant && <VariantContainer>
+                    <Separator/>
+                    <StyledText>
+                        <strong>Variante:</strong> {selectedVariant.name}
+                    </StyledText>
+                    <StyledText>
+                        <strong>Zug:</strong> {selectedVariant.move}
+                    </StyledText>
+                </VariantContainer>}
+
+                <ButtonContainer>
+                    <IconButton onClick={handleBack}>
+                        <ArrowBackIcon />
+                    </IconButton>
+                    <IconButton onClick={handleFlipBoard}>
+                        <CachedIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleForward()}>
+                        <ArrowForwardIcon />
+                    </IconButton>
+                </ButtonContainer>
             </ControlContainer>
             <OpeningContainer>
-                <StyledOpeningsContainer style={{ height: selectedOpening === -1 ? '100%' : null }}>
+                <StyledOpeningsContainer style={{ height: selectedOpening === -1 ? '100%' : '100px' }}>
                     <StyledTextFieldWrapper>
                         <StyledTextField
                             id="outlined-basic"
@@ -420,6 +640,16 @@ export function LearningPage() {
                     </InformationContainer>
                 )}
             </OpeningContainer>
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={6000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            >
+                <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </PageContainer>
     );
 }

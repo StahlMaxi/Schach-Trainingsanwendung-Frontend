@@ -74,11 +74,8 @@ export function MobileNavLinks({ setNavBarOpen }) {
             <LinkItem active={pathname === "/learn"}>
                 <StyledLink to="/learn" onClick={closeMenu}>Lernen</StyledLink>
             </LinkItem>
-            <LinkItem active={pathname === "/train"}>
+            <LinkItem active={/^\/train/.test(pathname)}>
                 <StyledLink to="/train" onClick={closeMenu}>Training</StyledLink>
-            </LinkItem>
-            <LinkItem active={pathname === "/settings"}>
-                <StyledLink to="/settings" onClick={closeMenu}>Einstellungen</StyledLink>
             </LinkItem>
             <IconButton onClick={toggleTheme}>
                 {theme.name === 'dark' ? <LightModeIcon/> : <DarkModeIcon/>}
