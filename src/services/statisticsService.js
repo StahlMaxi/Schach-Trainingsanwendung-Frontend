@@ -1,11 +1,35 @@
 const REACT_APP_BACKEND_API_BASE_URL = process.env.REACT_APP_BACKEND_API_BASE_URL;
 
+function getToken() {
+  const tokenData = localStorage.getItem('token');
+
+  if (!tokenData) {
+    const error = new Error("Kein Token vorhanden");
+    error.status = 401;
+    throw error;
+  }
+
+  try {
+    const parsed = JSON.parse(tokenData);
+
+    if (new Date().getTime() > parsed.expiry) {
+      localStorage.removeItem('token');
+      const error = new Error("Token ist abgelaufen");
+      error.status = 401;
+      throw error;
+    }
+
+    return parsed.value;
+  } catch (e) {
+    const error = new Error("Token konnte nicht gelesen werden");
+    error.status = 401;
+    throw error;
+  }
+}
+
 export async function setVariantStatistics(variantStatistics) {
     try {
-        const tokenData = localStorage.getItem('token');
-
-        const parsedTokenData = JSON.parse(tokenData);
-        const token = parsedTokenData.value;
+        const token = getToken();
 
         const response = await fetch(`${REACT_APP_BACKEND_API_BASE_URL}/statistics/variants`, {
             method: 'POST',
@@ -17,7 +41,9 @@ export async function setVariantStatistics(variantStatistics) {
         });
 
         if (!response.ok) {
-            throw new Error('Keine Erlaubnis für diese API');
+          const error = new Error("Erstellen der Statistik fehlgeschlagen");
+          error.status = response.status;
+          throw error;
         }
     } catch (error) {
         throw error;
@@ -26,10 +52,7 @@ export async function setVariantStatistics(variantStatistics) {
 
 export async function getOpeningStatistics() {
   try {
-    const tokenData = localStorage.getItem('token');
-
-    const parsedTokenData = JSON.parse(tokenData);
-    const token = parsedTokenData.value;
+    const token = getToken();
 
     const response = await fetch(`${REACT_APP_BACKEND_API_BASE_URL}/statistics/variants`, {
       method: 'GET',
@@ -40,7 +63,9 @@ export async function getOpeningStatistics() {
     });
 
     if (!response.ok) {
-      throw new Error('Keine Erlaubnis für diese API');
+      const error = new Error("Statistik-Abfrage fehlgeschlagen");
+      error.status = response.status;
+      throw error;
     }
 
     const data = await response.json();
@@ -52,10 +77,7 @@ export async function getOpeningStatistics() {
 
 export async function getVariantStatistics(id) {
   try {
-    const tokenData = localStorage.getItem('token');
-
-    const parsedTokenData = JSON.parse(tokenData);
-    const token = parsedTokenData.value;
+    const token = getToken();
 
     const response = await fetch(`${REACT_APP_BACKEND_API_BASE_URL}/statistics/variants/${id}`, {
       method: 'GET',
@@ -66,7 +88,9 @@ export async function getVariantStatistics(id) {
     });
 
     if (!response.ok) {
-      throw new Error('Keine Erlaubnis für diese API');
+      const error = new Error("Varianten-Statistik-Abfrage fehlgeschlagen");
+      error.status = response.status;
+      throw error;
     }
 
     const data = await response.json();

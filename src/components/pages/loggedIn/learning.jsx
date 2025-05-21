@@ -306,7 +306,6 @@ export function LearningPage({ handleLogOut }) {
     const theme = useTheme();
 
     const [boardWidth, setBoardWith] = useState(0);
-    const [game, setGame] = useState(new Chess());
     const [fen, setFen] = useState("start");
     const [isBoardFlipped, setIsBoardFlipped] = useState(false);
 
@@ -409,8 +408,6 @@ export function LearningPage({ handleLogOut }) {
 
     const resetSelectedOpening = () => {
         const freshGame = new Chess();
-
-        setGame(freshGame);
         setFen(freshGame.fen());
 
         setSearch('');
@@ -454,7 +451,7 @@ export function LearningPage({ handleLogOut }) {
 
             setNextMoves(filteredMoves);
         } catch (error) {
-            let message = "Ein unerwarteter Fehler ist aufgetreten.";
+            let message;
             if(error.status === 400) {
                 message = "Das Played-Parameter ist nicht korrekt formatiert";
             } else if(error.status === 401) {
@@ -463,7 +460,6 @@ export function LearningPage({ handleLogOut }) {
             } else {
                 message = "Fehler beim Abruf der Eröffnungen.";
             }
-
             showSnackbar(message, "error");
         }
     }
@@ -486,7 +482,6 @@ export function LearningPage({ handleLogOut }) {
             if (result) {
                 const newPlayedMoves = playedMoves ? `${playedMoves} ${move}` : move;
 
-                setGame(newGame);
                 setFen(newGame.fen());
                 setPlayedMoves(newPlayedMoves);
                 setMoveHistory(prev => [...prev, move]);
@@ -510,7 +505,6 @@ export function LearningPage({ handleLogOut }) {
             const newGame = new Chess();
             newHistory.forEach(move => newGame.move(move, { sloppy: true }));
 
-            setGame(newGame);
             setFen(newGame.fen());
 
             getNextOpeningMovesRequest(selectedOpening, newPlayedMoves);

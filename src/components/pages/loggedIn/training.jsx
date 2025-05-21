@@ -10,6 +10,7 @@ import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import { useNavigate } from "react-router-dom";
 import { DeviceSize } from "../../responsive";
 
 import { getOpenings, getVariants, getNextVariantMove } from "../../../services/openingService";
@@ -74,8 +75,12 @@ const OpeningScrollContainer = styled.div`
 
 const OpeningItem = styled.div`
     padding: 10px;
-    border-bottom: 1px solid #ccc;
     cursor: pointer;
+
+    &:not(:last-child) {
+        border-bottom: 1px solid #ccc;
+    }
+
     &:hover {
         background-color: ${(props) => props.theme.colors.hover};
     }
@@ -178,6 +183,8 @@ export function TrainingPage({ handleLogOut }) {
     const [snackbarMessage, setSnackbarMessage] = useState("");
     const [snackbarSeverity, setSnackbarSeverity] = useState("error");
 
+    const navigate = useNavigate();
+
     const buttonColor = {
         backgroundColor: theme.theme.colors.backgroundCounter,
         color: theme.theme.colors.textCounter,
@@ -197,9 +204,16 @@ export function TrainingPage({ handleLogOut }) {
                 }
             }
         } catch (error) {
-            console.error('Fehler bei der Abfrage der Eröffnungen:', error);
+            let message;
+            if (error.status === 401) {
+                message = "Sie sind nicht autorisiert für diesen Endpunkt.";
+                handleLogOut();
+            } else {
+                message = "Fehler beim Abruf der Varianten.";
+            }
+            showSnackbar(message, "error");
         }
-    }, [variantName]);
+    }, [handleLogOut, variantName]);
 
     const getOpeningsRequest = useCallback(async () => {
         try {
@@ -293,6 +307,7 @@ export function TrainingPage({ handleLogOut }) {
         setVariantSearch("");
         setSelectedOpeningId(-1);
         setSelectedVariantId(-1);
+        navigate("/train");
 
         resetGame();
     };
@@ -314,6 +329,7 @@ export function TrainingPage({ handleLogOut }) {
         setVariantSearch("");
         setSelectedVariantId(-1);
         setSelectedVariant(null);
+        navigate("/train");
         
         resetGame();
     }
@@ -351,7 +367,18 @@ export function TrainingPage({ handleLogOut }) {
             const data = await getNextVariantMove({ id, played });
             return data;
         } catch (error) {
-            console.error('Fehler bei der Abfrage der nächsten Züge:', error);
+            let message;
+            if(error.status === 400) {
+                message = "Das Played-Parameter ist nicht korrekt formatiert";
+            } else if(error.status === 401) {
+                message = "Sie sind nicht autorisiert für diesen Endpunkt.";
+                handleLogOut();
+            } else if(error.status === 404) {
+                message = "Die angegebene Eröffnung existiert nicht.";
+            } else {
+                message = "Fehler beim Abruf des nächsten Zuges.";
+            }
+            showSnackbar(message, "error");
         }
     }
 
@@ -480,7 +507,16 @@ export function TrainingPage({ handleLogOut }) {
         try {
             await setVariantStatistics({variantId: selectedVariantId, errors, hints});
         } catch (error) {
-            console.error('Fehler beim Speichern der Variantendaten:', error);
+            let message;
+            if(error.status === 401) {
+                message = "Sie sind nicht autorisiert für diesen Endpunkt.";
+                handleLogOut();
+            } else if(error.status === 404) {
+                message = "Es gibt keine Statistiken für diese Variante.";
+            } else {
+                message = "Fehler beim Erstellen der Statistik.";
+            }
+            showSnackbar(message, "error");
         }
     }
 

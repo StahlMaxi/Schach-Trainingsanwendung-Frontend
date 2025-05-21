@@ -118,13 +118,14 @@ export function LoginPage({ setLoggedIn, setUser }) {
             setPassword("");
             navigate("/");
         } catch (error) {
-            let message = "Login fehlgeschlagen. Bitte versuchen Sie es erneut.";
+            let message;
             if (error.status === 401) {
                 message = "Falsches Passwort.";
             } else if (error.status === 404) {
                 message = "Nutzer nicht gefunden.";
+            } else {
+                message = "Login fehlgeschlagen. Bitte versuchen Sie es erneut.";
             }
-
             showSnackbar(message, "error");
         } finally {
             setLoading(false);

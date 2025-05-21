@@ -113,11 +113,13 @@ export function RegistrationPage() {
             showSnackbar("Registrierung erfolgreich!", "success");
             setTimeout(() => navigate("/login"), 500);
         } catch (error) {
+            let message;
             if (error.status === 409) {
-                showSnackbar("Nutzername bereits vergeben.", "error");
+                message = "Nutzername bereits vergeben.";
             } else {
-                showSnackbar("Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.", "error");
+                message = "Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.";
             }
+            showSnackbar(message, "error");
         } finally {
             setLoading(false);
         }
