@@ -33,13 +33,24 @@ const PageContainer = styled.div`
 `;
 
 //Schachbrett
+//Padding Left for horizontal positioning
 const ChessBoardContainer = styled.div`
     width: 60%;
     margin-right: 50px;
+    padding-left: 150px;
+
+    @media (max-width: 1700px) {
+        padding-left: 100px;
+    }
+
+    @media (max-width: 1500px) {
+        padding-left: 50px;
+    }
 
     @media (max-width: ${DeviceSize.laptop}px) {
         order: 1;
         width: 60%;
+        padding-left: 0px;
     }
 
     @media (max-width: ${DeviceSize.tablet}px) {
@@ -48,6 +59,15 @@ const ChessBoardContainer = styled.div`
         height: 50%;
         margin-right: 0px;
         margin-bottom: 20px;
+        padding-left: 200px;
+    }
+
+    @media (max-width: 800px) {
+        padding-left: 100px;;
+    }
+
+    @media (max-width: 700px) {
+        padding-left: 0px;;
     }
 `;
 

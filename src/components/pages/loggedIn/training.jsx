@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect, useState, useCallback } from "react";
 import styled from "styled-components";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
@@ -8,6 +8,9 @@ import { useParams } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import { DeviceSize } from "../../responsive";
 
 import { getOpenings, getVariants, getNextVariantMove } from "../../../services/openingService";
 import { setVariantStatistics } from "../../../services/statisticsService";
@@ -22,6 +25,7 @@ const PageContainer = styled.div`
 
 const ChessBoardContainer = styled.div`
     width: 60%;
+    margin-right: 50px;
     padding-left: 150px;
 `;
 
@@ -101,6 +105,11 @@ const InfoHeader = styled.div`
     align-items: center;
 `;
 
+const StyledH3 = styled.h3`
+    text-align: center;
+    margin-right: 20px;
+`;
+
 const ResetButton = styled(IconButton)`
     float: right;
 `;
@@ -116,13 +125,15 @@ const InfoSection = styled.div`
     gap: 10px;
 `;
 
-const Label = styled.p`
-    font-weight: bold;
-    margin: 0;
+const Info = styled.div`
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 `;
 
-const Value = styled.p`
-    margin: 0;
+const Label = styled.p`
+    font-weight: bold;
+    margin-right: 10px;
 `;
 
 const Separator = styled.div`
@@ -132,7 +143,7 @@ const Separator = styled.div`
 `;
 
 
-export function TrainingPage() {
+export function TrainingPage({ handleLogOut }) {
     const theme = useTheme();
 
     const { openingID, variantName } = useParams();
@@ -144,14 +155,16 @@ export function TrainingPage() {
     const [openings, setOpenings] = useState([]);
     const [variants, setVariants] = useState([]);
     const [openingSearch, setOpeningSearch] = useState("");
-    const [selectedOpening, setSelectedOpening] = useState(-1);
+    const [selectedOpeningId, setSelectedOpeningId] = useState(-1);
     const [variantSearch, setVariantSearch] = useState("");
-    const [selectedVariant, setSelectedVariant] = useState(-1);
+    const [selectedVariantId, setSelectedVariantId] = useState(-1);
+    const [selectedVariant, setSelectedVariant] = useState(null);
 
-    const [startWhite, setStartWhite] = useState(null);
+    const [startWhite, setStartWhite] = useState(true);
     const [playedMoves, setPlayedMoves] = useState("");
 
     const [gameText, setGameText] = useState("");
+    const [playerError, setPlayerError] = useState(false);
     const [errors, setErrors] = useState(0);
     const [hints, setHints] = useState(0);
     const [hintStep, setHintStep] = useState(0);
@@ -161,35 +174,34 @@ export function TrainingPage() {
 
     const [gameRunning, setGameRunning] = useState(false);
 
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [snackbarSeverity, setSnackbarSeverity] = useState("error");
+
     const buttonColor = {
         backgroundColor: theme.theme.colors.backgroundCounter,
         color: theme.theme.colors.textCounter,
     };
 
-    useLayoutEffect(() => {
-        const tokenCorrect = checkValidToken();
-        if (tokenCorrect) {
-            getOpeningsRequest();
-        }
-        const divElement = document.getElementById('boardDiv');
-        if (divElement) {
-            const divWidth = divElement.offsetWidth;
-            setBoardWith(divWidth * 0.7);
-        }
-    }, []);
+    const getVariantsRequest = useCallback(async (openingId) => {
+        try {
+            const data = await getVariants(openingId);
+            setVariants(data);
 
-    function checkValidToken() {
-        const itemStr = localStorage.getItem('token');
-        if (!itemStr) return false;
-        const item = JSON.parse(itemStr);
-        if (new Date().getTime() > item.expiry) {
-            localStorage.removeItem('token');
-            return false;
+            if (variantName) {
+                const variant = data.find(variant => variant.name === variantName);
+                if (variant) {
+                    setVariantSearch(variantName);
+                    setSelectedVariantId(variant.id);
+                    setSelectedVariant(variant);
+                }
+            }
+        } catch (error) {
+            console.error('Fehler bei der Abfrage der Eröffnungen:', error);
         }
-        return true;
-    }
+    }, [variantName]);
 
-    async function getOpeningsRequest() {
+    const getOpeningsRequest = useCallback(async () => {
         try {
             const data = await getOpenings();
             setOpenings(data);
@@ -198,14 +210,62 @@ export function TrainingPage() {
                 const opening = data.find(opening => opening.id === openingID);
                 if (opening) {
                     setOpeningSearch(opening.name);
-                    setSelectedOpening(openingID);
+                    setSelectedOpeningId(openingID);
                     getVariantsRequest(openingID);
                 }
             }
         } catch (error) {
-            console.error('Fehler bei der Abfrage der Eröffnungen:', error);
+            let message;
+            if (error.status === 401) {
+                message = "Sie sind nicht autorisiert für diesen Endpunkt.";
+                handleLogOut();
+            } else {
+                message = "Fehler beim Abruf der Eröffnungen.";
+            }
+            showSnackbar(message, "error");
         }
-    }
+    }, [handleLogOut, openingID, getVariantsRequest]);
+
+    useLayoutEffect(() => {
+        const updateBoardSize = () => {
+            const divElement = document.getElementById("boardDiv");
+            if (divElement) {
+                const isTabletOrSmaller = window.innerWidth <= DeviceSize.tablet;
+                const divWidth = divElement.offsetWidth;
+
+                if(isTabletOrSmaller) {
+                    const size = isTabletOrSmaller
+                        ? Math.min(divWidth, window.innerHeight * 0.5)
+                        : divWidth;
+
+                    setBoardWith(size);
+                } else {
+                    const availableHeight = window.innerHeight - 150; 
+                    const maxSize = Math.min(divWidth, availableHeight);
+
+                    setBoardWith(maxSize);
+                }
+            }
+        };
+
+        updateBoardSize();
+
+        getOpeningsRequest();
+
+        window.addEventListener("resize", updateBoardSize);
+
+        return () => {
+            window.removeEventListener("resize", updateBoardSize);
+        };
+    }, [getOpeningsRequest]);
+
+    const showSnackbar = (message, severity = "error") => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    };
+
+    const handleSnackbarClose = () => setSnackbarOpen(false);
 
     const filteredOpenings = openings.filter(opening => {
         const lowerSearch = openingSearch.toLowerCase();
@@ -220,7 +280,7 @@ export function TrainingPage() {
 
     const openingSelected = (opening) => {
         setOpeningSearch(opening.name);
-        setSelectedOpening(opening.id);
+        setSelectedOpeningId(opening.id);
         getVariantsRequest(opening.id);
     }
 
@@ -231,28 +291,11 @@ export function TrainingPage() {
 
         setOpeningSearch("");
         setVariantSearch("");
-        setSelectedOpening(-1);
-        setSelectedVariant(-1);
+        setSelectedOpeningId(-1);
+        setSelectedVariantId(-1);
 
         resetGame();
     };
-
-    async function getVariantsRequest(openingId) {
-        try {
-            const data = await getVariants(openingId);
-            setVariants(data);
-
-            if (variantName) {
-                const variant = data.find(variant => variant.name === variantName);
-                if (variant) {
-                    setVariantSearch(variantName);
-                    setSelectedVariant(variant.id);
-                }
-            }
-        } catch (error) {
-            console.error('Fehler bei der Abfrage der Eröffnungen:', error);
-        }
-    }
 
     const filteredVariants = () => {
         const lowerSearch = variantSearch.toLowerCase();
@@ -263,54 +306,49 @@ export function TrainingPage() {
 
     const variantSelected = (variant) => {
         setVariantSearch(variant.name);
-        setSelectedVariant(variant.id);
+        setSelectedVariantId(variant.id);
+        setSelectedVariant(variant);
     };
 
     const resetSelectedVariant = () => {
         setVariantSearch("");
-        setSelectedVariant(-1);
+        setSelectedVariantId(-1);
+        setSelectedVariant(null);
         
         resetGame();
     }
 
-    const startingSelected = (startPosition) => {
-        if(startPosition !== '') {
-            const startsWhite = startPosition === "white" ? true : false;
-            setStartWhite(startsWhite);
-        }
-    }
-
     const startGame = async () => {
-        resetGame();
-        setGameRunning(true);
+        if (selectedOpeningId !== -1 && selectedVariantId !== -1) {
+            resetGame();
+            setGameRunning(true);
 
-        if(startWhite) {
-            const variantData = await getNextVariantMoveRequest(selectedVariant, "");
-            const nextMove = variantData?.move;
+            if(startWhite) {
+                const variantData = await getNextVariantMoveRequest(selectedVariantId, "");
+                const nextMove = variantData?.move;
 
-            if (!nextMove) {
-                setGameText("Die Variante besitzt keine Züge");
-                setGameRunning(false);
-                return;
-            } else {
-                setNextExpectedPlayerMove(nextMove);
+                if (!nextMove) {
+                    setGameText("Die Variante besitzt keine Züge");
+                    setGameRunning(false);
+                    return;
+                } else {
+                    setNextExpectedPlayerMove(nextMove);
+                }
             }
-        }
 
-        setGameText(startWhite ? "Du bist am Zug." : "Computer beginnt.");
+            setGameText(startWhite ? "Du bist am Zug. Führe einen gültigen Zug aus." : "Der Computer beginnt.");
 
-        if (!startWhite) {
-            setTimeout(async () => {
-                await handleComputerTurn();
-            }, 500);
+            if (!startWhite) {
+                setTimeout(async () => {
+                    await handleComputerTurn();
+                }, 1000);
+            }
         }
     };
 
     async function getNextVariantMoveRequest(id, played = "") {
-        console.log("Get Moves: " + played);
         try {
             const data = await getNextVariantMove({ id, played });
-            console.log(data.move);
             return data;
         } catch (error) {
             console.error('Fehler bei der Abfrage der nächsten Züge:', error);
@@ -318,23 +356,28 @@ export function TrainingPage() {
     }
 
     const handlePlayerTurn = async (from, to) => {
+        setPlayerError(false);
+
+        const localGame = new Chess(fen);
+
         let attemptedMove;
         try {
-            attemptedMove = new Chess(game.fen()).move({ from, to, promotion: "q" })?.san;
+            attemptedMove = localGame.move({ from, to, promotion: "q" })?.san;
         } catch (err) {
+            setPlayerError(true);
             setGameText("Ungültiger Zug. Bitte führe einen legalen Zug aus.");
             return false;
         }
-        const expectedMove = new Chess(game.fen()).move(nextExpectedPlayerMove, { sloppy: true })?.san;
+        const expectedMove = new Chess(fen).move(nextExpectedPlayerMove, { sloppy: true })?.san;
 
         if (attemptedMove === expectedMove) {
-            const gameCopy = new Chess(game.fen());
-            gameCopy.move(nextExpectedPlayerMove, { sloppy: true });
+            const updatedGame = new Chess(fen);
+            updatedGame.move(nextExpectedPlayerMove, { sloppy: true });
 
             const updatedMoves = playedMoves + (playedMoves ? "," : "") + nextExpectedPlayerMove;
 
-            setGame(gameCopy);
-            setFen(gameCopy.fen());
+            setGame(updatedGame);
+            setFen(updatedGame.fen());
             setPlayedMoves(updatedMoves);
 
             setGameText("Richtiger Zug! Jetzt ist der Computer dran.");
@@ -343,24 +386,27 @@ export function TrainingPage() {
             setHintText("");
 
             setTimeout(async () => {
-                await handleComputerTurn(gameCopy, updatedMoves);
-            }, 500);
+                await handleComputerTurn(updatedGame, updatedMoves);
+            }, 1000);
             return true;
         } else {
             setErrors(errors + 1);
+            setPlayerError(true);
             setGameText("Falscher Zug. Versuche es nochmal.");
             return false;
         }
     };
 
     const handleComputerTurn = async (playerGame = game, currentMoves = playedMoves) => {
-        const variantData = await getNextVariantMoveRequest(selectedVariant, currentMoves);
+        const variantData = await getNextVariantMoveRequest(selectedVariantId, currentMoves);
         const nextMove = variantData?.move;
 
         if (!nextMove) {
             setGameText("Die Variante ist zu Ende. Deine Ergebnisse werden nun abgespeichert. Du kannst nun entweder eine neue Eröffnung trainieren oder von vorne starten.");
             setVariantStatisticsRequest();
-            setGameRunning(false);
+            setTimeout(async () => {
+                resetGame()
+            }, 10000);
             return;
         }
 
@@ -377,17 +423,19 @@ export function TrainingPage() {
         setFen(gameCopy.fen());
         setPlayedMoves(updatedMoves);
 
-        const newVariantData = await getNextVariantMoveRequest(selectedVariant, updatedMoves);
+        const newVariantData = await getNextVariantMoveRequest(selectedVariantId, updatedMoves);
         const newNextMove = newVariantData?.move;
 
         if(!newNextMove) {
             setGameText("Die Variante ist zu Ende. Deine Ergebnisse werden nun abgespeichert. Du kannst nun entweder eine neue Eröffnung trainieren oder von vorne starten.");
             setVariantStatisticsRequest();
-            setGameRunning(false);
+            setTimeout(async () => {
+                resetGame()
+            }, 10000);
             return;
         } else {
             setNextExpectedPlayerMove(newNextMove);
-            setGameText("Du bist am Zug.");
+            setGameText("Du bist wieder am Zug. Führe einen gültigen Zug aus.");
         }
     };
 
@@ -430,7 +478,7 @@ export function TrainingPage() {
 
     async function setVariantStatisticsRequest() {
         try {
-            await setVariantStatistics({variantId: selectedVariant, errors, hints});
+            await setVariantStatistics({variantId: selectedVariantId, errors, hints});
         } catch (error) {
             console.error('Fehler beim Speichern der Variantendaten:', error);
         }
@@ -462,24 +510,32 @@ export function TrainingPage() {
             </ChessBoardContainer>
             <InformationContainer>
                 <InfoHeader>
-                    <h3>Informationen</h3>
+                    {selectedVariantId === -1 && <StyledH3>Eröffnung und Variante auswählen</StyledH3>}
+                    {selectedVariantId !== -1 && <StyledH3>{selectedVariant.name}</StyledH3>}
                     <ResetButton onClick={resetGame} color="error" title="Spiel zurücksetzen">
                         <RestartAltIcon />
                     </ResetButton>
                 </InfoHeader>
 
+                <Separator />
+
                 <InfoSection>
-                    <Value>{gameText}</Value>
+                    {selectedVariantId !== -1 && !gameRunning && <strong><p>Wähle eine Startseite und starte das Spiel über den Startknopf</p></strong>}
+                    {playerError && <strong><p style={{ color: "red" }}>{gameText}</p></strong>}
+                    {!playerError && <strong><p>{gameText}</p></strong>}
                 </InfoSection>
 
                 <Separator />
 
                 <InfoSection>
-                    <Label>Anzahl Fehler:</Label>
-                    <Value>{errors}</Value>
-
-                    <Label>Anzahl Hinweise:</Label>
-                    <Value>{hints}</Value>
+                    <Info>
+                        <Label>Anzahl Fehler:</Label>
+                        <p>{errors}</p>
+                    </Info>
+                    <Info>
+                        <Label>Anzahl Hinweise:</Label>
+                        <p>{hints}</p>
+                    </Info>
                 </InfoSection>
 
                 <Separator />
@@ -501,7 +557,7 @@ export function TrainingPage() {
                 </InfoSection>
             </InformationContainer>
             <OpeningContainer>
-                <StyledOpeningsContainer style={{ height: selectedOpening === -1 ? '100%' : null }}>
+                <StyledOpeningsContainer style={{ height: selectedOpeningId === -1 ? '100%' : null }}>
                     <StyledTextFieldWrapper>
                         <StyledTextField
                             value={openingSearch}
@@ -513,7 +569,7 @@ export function TrainingPage() {
                             <DeleteIcon />
                         </StyledIconButton>
                     </StyledTextFieldWrapper>
-                    {selectedOpening === -1 && (
+                    {selectedOpeningId === -1 && (
                         <OpeningScrollContainer>
                             {filteredOpenings.length === 0 ? (
                                 <div>Keine Eröffnung gefunden</div>
@@ -527,7 +583,7 @@ export function TrainingPage() {
                         </OpeningScrollContainer>
                     )}
                 </StyledOpeningsContainer>
-                {selectedOpening !== -1 && (
+                {selectedOpeningId !== -1 && (
                     <StyledOpeningsContainer>
                         <StyledTextFieldWrapper>
                             <StyledTextField
@@ -540,7 +596,7 @@ export function TrainingPage() {
                                 <DeleteIcon />
                             </StyledIconButton>
                         </StyledTextFieldWrapper>
-                        {selectedVariant === -1 && (
+                        {selectedVariantId === -1 && (
                             <OpeningScrollContainer>
                                 {filteredVariants().length === 0 ? (
                                     <div>Keine Varianten gefunden</div>
@@ -555,25 +611,34 @@ export function TrainingPage() {
                         )}
                     </StyledOpeningsContainer>
                 )}
-                {selectedVariant !== -1 && <StyledOpeningsContainer>
+                {selectedVariantId !== -1 && <StyledOpeningsContainer>
                     <FormControl fullWidth variant="outlined" style={{ marginTop: '20px' }}>
                         <InputLabel id="color-select-label">Startseite wählen</InputLabel>
                         <Select
                             labelId="color-select-label"
                             id="color-select"
-                            value={startWhite === null ? "" : startWhite ? "white" : "black"}
-                            onChange={(e) => startingSelected(e.target.value)}
+                            value={startWhite}
+                            onChange={(e) => setStartWhite(e.target.value === "true")}
                             label="Farbe wählen"
                             disabled={gameRunning}
                         >
-                            <MenuItem value="">-</MenuItem>
-                            <MenuItem value="white">Weiß</MenuItem>
-                            <MenuItem value="black">Schwarz</MenuItem>
+                            <MenuItem value="true">Weiß</MenuItem>
+                            <MenuItem value="false">Schwarz</MenuItem>
                         </Select>
                     </FormControl>
                     <StyledButton sx={buttonColor} onClick={startGame} variant="contained">Start</StyledButton>
                 </StyledOpeningsContainer>}
             </OpeningContainer>
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={6000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            >
+                <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </PageContainer>
     );
 }
