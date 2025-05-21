@@ -34,6 +34,23 @@ function App() {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    checkValidToken();
+  }, []); 
+
+  function checkValidToken() {
+    const itemStr = localStorage.getItem('token');
+    if (!itemStr) return;
+  
+    const item = JSON.parse(itemStr);
+    if (new Date().getTime() > item.expiry) {
+      localStorage.removeItem('token');
+      return;
+    }
+    
+    setLoggedIn(true);
+  }
+
   const handleLogOut = () => {
     setLoggedIn(false);
     setUserName("");

@@ -11,22 +11,44 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CachedIcon from '@mui/icons-material/Cached';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import { DeviceSize } from "../../responsive";
 
 import { getOpenings } from "../../../services/openingService";
 import { getNextOpeningMoves } from "../../../services/openingService";
 
 const PageContainer = styled.div`
-    height: calc(100vh - 60px); 
     display: flex;
     flex-direction: row;
     background-color: ${(props) => props.theme.colors.background};
     padding: 50px;
+
+    @media (min-width: ${DeviceSize.laptop}px) {
+        height: calc(100vh - 60px); 
+    }
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
 `;
 
 //Schachbrett
 const ChessBoardContainer = styled.div`
     width: 60%;
-    padding-left: 150px;
+    margin-right: 50px;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        order: 1;
+        width: 60%;
+    }
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        order: 1;
+        width: 100%;
+        height: 50%;
+        margin-right: 0px;
+        margin-bottom: 20px;
+    }
 `;
 
 //Varianten auswählen
@@ -41,10 +63,25 @@ const ControlContainer = styled.div`
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     background-color: ${(props) => props.theme.colors.card};
     margin-right: 20px;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        order: 2;
+        flex: 1;
+        height: ${({ $boardHeight }) => `${$boardHeight}px`};
+        margin-right: 0;
+    }
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        height: auto;
+    }
 `;
 
 const StyledH3 = styled.h3`
     text-align: center;
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        order: 3;
+    }
 `;
 
 const OpeningEndContainer = styled.div`
@@ -59,6 +96,10 @@ const OpeningEndContainer = styled.div`
     text-align: center;
     margin-top: 20px;
     background-color: ${(props) => props.theme.colors.hover};
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        order: 2;
+    }
 `;
 
 const StyledText = styled.div`
@@ -76,6 +117,12 @@ const MoveScrollContainer = styled.div`
     flex-grow: 1;
     overflow-y: auto;
     padding: 10px;
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        max-height: 300px;
+        order: 5;
+        margin-top: 10px;
+    }
 `;
 
 const ScrollableMoveList = styled.div`
@@ -103,6 +150,10 @@ const MoveItem = styled.div`
 const VariantContainer = styled.div`
     display: flex;
     flex-direction: column;
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        order: 3;
+    }
 `;
 
 const Separator = styled.hr`
@@ -116,6 +167,10 @@ const ButtonContainer = styled.div`
     flex-direction: row;
     justify-content: space-between;
     margin-top: 20px;
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        order: 1;
+    }
 `;
 
 //Eröffnungen
@@ -127,6 +182,19 @@ const OpeningContainer = styled.div`
     gap: 20px;
     align-self: flex-end;
     margin-left: auto;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        order: 3;
+        width: 100vh;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        width: 100%;
+        flex-direction: column;
+    }
 `;
 
 const StyledOpeningsContainer = styled.div`
@@ -137,6 +205,10 @@ const StyledOpeningsContainer = styled.div`
     flex-direction: column;
     gap: 20px;
     background-color: ${(props) => props.theme.colors.card};
+
+     @media (max-width: ${DeviceSize.laptop}px) {
+        max-height: 300px;
+    }
 `;
 
 const StyledTextFieldWrapper = styled.div`
@@ -179,6 +251,10 @@ const InformationContainer = styled.div`
     display: flex;
     flex-direction: column;
     gap: 20px;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        flex: 1;
+    }
 `;
 
 const StyledPlayedMovesContainer = styled.div`
@@ -254,13 +330,36 @@ export function LearningPage({ handleLogOut }) {
     }, [handleLogOut]);
 
     useLayoutEffect(() => {
+        const updateBoardSize = () => {
+            const divElement = document.getElementById("boardDiv");
+            if (divElement) {
+                const isTabletOrSmaller = window.innerWidth <= DeviceSize.tablet;
+                const divWidth = divElement.offsetWidth;
+
+                if(isTabletOrSmaller) {
+                    const size = isTabletOrSmaller
+                        ? Math.min(divWidth, window.innerHeight * 0.5)
+                        : divWidth;
+
+                    setBoardWith(size);
+                } else {
+                    const availableHeight = window.innerHeight - 150; 
+                    const maxSize = Math.min(divWidth, availableHeight);
+
+                    setBoardWith(maxSize);
+                }
+            }
+        };
+
+        updateBoardSize();
+
         getOpeningsRequest();
 
-        const divElement = document.getElementById('boardDiv');
-        if (divElement) {
-            const divWidth = divElement.offsetWidth;
-            setBoardWith(divWidth * 0.7);
-        }
+        window.addEventListener("resize", updateBoardSize);
+
+        return () => {
+            window.removeEventListener("resize", updateBoardSize);
+        };
     }, [getOpeningsRequest]);
 
     const showSnackbar = (message, severity = "error") => {
@@ -413,7 +512,7 @@ export function LearningPage({ handleLogOut }) {
                     boardOrientation={isBoardFlipped ? 'black' : 'white'}
                 />}
             </ChessBoardContainer>
-            <ControlContainer>
+            <ControlContainer $boardHeight={boardWidth}>
                 {variantEnd && (
                     <OpeningEndContainer>
                         <StyledText>
@@ -468,7 +567,7 @@ export function LearningPage({ handleLogOut }) {
                 </ButtonContainer>
             </ControlContainer>
             <OpeningContainer>
-                <StyledOpeningsContainer style={{ height: selectedOpening === -1 ? '100%' : null }}>
+                <StyledOpeningsContainer style={{ height: selectedOpening === -1 ? '100%' : '100px' }}>
                     <StyledTextFieldWrapper>
                         <StyledTextField
                             id="outlined-basic"
