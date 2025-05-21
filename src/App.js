@@ -34,23 +34,6 @@ function App() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    checkValidToken();
-  }, []); 
-
-  function checkValidToken() {
-    const itemStr = localStorage.getItem('token');
-    if (!itemStr) return;
-  
-    const item = JSON.parse(itemStr);
-    if (new Date().getTime() > item.expiry) {
-      localStorage.removeItem('token');
-      return;
-    }
-    setLoggedIn(true);
-    navigate("/");
-  }
-
   const handleLogOut = () => {
     setLoggedIn(false);
     setUserName("");
@@ -64,7 +47,7 @@ function App() {
       {!navBarOpen && <Content>
         <Routes>
           <Route path="/" element={isLoggedIn ? <HomePage/> : <HomePageLO/>}/>
-          <Route path="/learn" element={isLoggedIn ? <LearningPage/> : <LearningPageLO/>}/>
+          <Route path="/learn" element={isLoggedIn ? <LearningPage handleLogOut={handleLogOut}/> : <LearningPageLO/>}/>
           <Route path="/train/:openingID?/:variantName?" element={isLoggedIn ? <TrainingPage /> : <TrainingPageLO />}/>
           <Route path="/login" element={!isLoggedIn ? <LoginPage setLoggedIn={setLoggedIn} setUser={setUserName}/> : null}/>
           <Route path="/register" element={!isLoggedIn ? <RegistrationPage/> : null}/>

@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect, useState, useCallback } from "react";
 import styled from "styled-components";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
@@ -9,6 +9,8 @@ import { Link } from "react-router-dom";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CachedIcon from '@mui/icons-material/Cached';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
 import { getOpenings } from "../../../services/openingService";
 import { getNextOpeningMoves } from "../../../services/openingService";
@@ -204,7 +206,7 @@ const MovesPlayedText = styled.div`
     text-align: center;
 `;
 
-export function LearningPage() {
+export function LearningPage({ handleLogOut }) {
     const theme = useTheme();
 
     const [boardWidth, setBoardWith] = useState(0);
@@ -220,48 +222,54 @@ export function LearningPage() {
     const [selectedMoveIndex, setSelectedMoveIndex] = useState(-1);
     const [selectedVariant, setSelectedVariant] = useState(null);
     const [playedMoves, setPlayedMoves] = useState("");
-    const [noMoreMoves, setNoMoreMoves] = useState(false);
+
+    const [variantEnd, setVariantEnd] = useState(false);
+    const [endedVariant, setEndedVariant] = useState(null);
 
     const [moveHistory, setMoveHistory] = useState([]);
+
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [snackbarSeverity, setSnackbarSeverity] = useState("error");
 
     const buttonColor = {
         backgroundColor: theme.theme.colors.backgroundCounter,
         color: theme.theme.colors.textCounter,
     };
 
-    useLayoutEffect(() => {
-        const tokenCorrect = checkValidToken();
-        if (tokenCorrect) {
-            getOpeningsRequest();
+    const getOpeningsRequest = useCallback(async () => {
+        try {
+            const data = await getOpenings();
+            setOpenings(data);
+        } catch (error) {
+            let message;
+            if (error.status === 401) {
+                message = "Sie sind nicht autorisiert für diesen Endpunkt.";
+                handleLogOut();
+            } else {
+                message = "Fehler beim Abruf der Eröffnungen.";
+            }
+            showSnackbar(message, "error");
         }
+    }, [handleLogOut]);
+
+    useLayoutEffect(() => {
+        getOpeningsRequest();
 
         const divElement = document.getElementById('boardDiv');
         if (divElement) {
             const divWidth = divElement.offsetWidth;
             setBoardWith(divWidth * 0.7);
         }
-    }, []);
+    }, [getOpeningsRequest]);
 
-    function checkValidToken() {
-        const itemStr = localStorage.getItem('token');
-        if (!itemStr) return false;
-      
-        const item = JSON.parse(itemStr);
-        if (new Date().getTime() > item.expiry) {
-          localStorage.removeItem('token');
-          return false;
-        }
-        return true;
-    }
+    const showSnackbar = (message, severity = "error") => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    };
 
-    async function getOpeningsRequest() {
-        try {
-            const data = await getOpenings();
-            setOpenings(data);
-        } catch (error) {
-            console.error('Fehler bei der Abfrage der Eröffnungen:', error);
-        }
-    }
+    const handleSnackbarClose = () => setSnackbarOpen(false);
 
     const filteredOpenings = openings.filter(opening => {
         const lowerSearch = search.toLowerCase();
@@ -291,7 +299,7 @@ export function LearningPage() {
         setNextMoves([]);
         setPlayedMoves("");
         setMoveHistory([]);
-        setNoMoreMoves(false);
+        setVariantEnd(false);
         setSelectedVariant(null);
         setSelectedMoveIndex(-1);
     };
@@ -301,28 +309,43 @@ export function LearningPage() {
             const data = await getNextOpeningMoves({ id, played });
             const filteredMoves = data.filter(move => move.move && move.move.trim() !== "");
 
-            if(selectedVariant && filteredMoves.length !== 0) {
-                if (selectedVariant) {
-                    const index = filteredMoves.findIndex(move => move.name === selectedVariant.name);
-                    
-                    if (index !== -1) {
-                        setSelectedVariant(filteredMoves[index]);
-                        setSelectedMoveIndex(index);
-                    } else {
-                        setSelectedVariant(null);
-                        setSelectedMoveIndex(-1);
-                    }
+            setVariantEnd(false);
+
+            if(selectedVariant) {
+                const index = filteredMoves.findIndex(move => move.name === selectedVariant.name);
+                
+                if (index !== -1) {
+                    setSelectedVariant(filteredMoves[index]);
+                    setSelectedMoveIndex(index);
+                } else {
+                    setVariantEnd(true);
+                    setEndedVariant(selectedVariant);
+                    setSelectedVariant(null);
+                    setSelectedMoveIndex(-1);
+                }
+            } else if(endedVariant) {
+                const indexEndedVariant = filteredMoves.findIndex(move => move.name === endedVariant.name);
+                
+                if(indexEndedVariant !== -1) {
+                    setSelectedMoveIndex(indexEndedVariant);
+                    setSelectedVariant(endedVariant);
+                    setEndedVariant(null);
                 }
             }
 
-            if(filteredMoves.length === 0) {
-                setNoMoreMoves(true);
-            } else {
-                setNoMoreMoves(false);
-            }
             setNextMoves(filteredMoves);
         } catch (error) {
-            console.error('Fehler bei der Abfrage der nächsten Züge:', error);
+            let message = "Ein unerwarteter Fehler ist aufgetreten.";
+            if(error.status === 400) {
+                message = "Das Played-Parameter ist nicht korrekt formatiert";
+            } else if(error.status === 401) {
+                message = "Sie sind nicht autorisiert für diesen Endpunkt.";
+                handleLogOut();
+            } else {
+                message = "Fehler beim Abruf der Eröffnungen.";
+            }
+
+            showSnackbar(message, "error");
         }
     }
 
@@ -333,6 +356,7 @@ export function LearningPage() {
 
     const handleForward = () => {
         if (selectedMoveIndex !== -1 && nextMoves[selectedMoveIndex]) {
+
             const move = nextMoves[selectedMoveIndex].move;
 
             const newGame = new Chess();
@@ -350,7 +374,7 @@ export function LearningPage() {
 
                 getNextOpeningMovesRequest(selectedOpening, newPlayedMoves);
             } else {
-                console.warn("Ungültiger Zug:", move);
+                showSnackbar("Ungültiger Zug: " + move, "error");
             }
         }
     };
@@ -390,16 +414,20 @@ export function LearningPage() {
                 />}
             </ChessBoardContainer>
             <ControlContainer>
-                {selectedOpening === -1 && <StyledH3>Eröffnung auswählen</StyledH3>}
-                {selectedOpening !== -1 && <StyledH3>Nächsten Zug auswählen</StyledH3>}
-                {noMoreMoves && (
+                {variantEnd && (
                     <OpeningEndContainer>
-                        <StyledText>Die Eröffnungsvariante ist zu Ende. Möchtest du sie nun üben?</StyledText>
-                        <Link to={`/train/${selectedOpening}/${selectedVariant.name}`}>
+                        <StyledText>
+                            Die Eröffnungsvariante <strong>{endedVariant.name}</strong> ist zu Ende. Möchtest du sie nun üben?
+                        </StyledText>
+                        <Link to={`/train/${selectedOpening}/${endedVariant.name}`}>
                             <BackButton sx={buttonColor} variant="contained">Üben</BackButton>
                         </Link>
                     </OpeningEndContainer>
                 )}
+
+                {selectedOpening === -1 && <StyledH3>Eröffnung auswählen</StyledH3>}
+                {selectedOpening !== -1 && !variantEnd && <StyledH3>Nächsten Zug auswählen</StyledH3>}
+                {selectedOpening !== -1 && variantEnd && nextMoves.length !== 0 && <StyledH3>Oder Nächsten Zug auswählen</StyledH3>}
 
                 <MoveScrollContainer>
                     <ScrollableMoveList>
@@ -495,6 +523,16 @@ export function LearningPage() {
                     </InformationContainer>
                 )}
             </OpeningContainer>
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={6000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            >
+                <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </PageContainer>
     );
 }
