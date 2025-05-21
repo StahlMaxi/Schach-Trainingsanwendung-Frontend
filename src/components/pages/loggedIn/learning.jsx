@@ -88,7 +88,7 @@ const ControlContainer = styled.div`
         order: 2;
         flex: 1;
         height: ${({ $boardHeight }) => `${$boardHeight}px`};
-        margin-right: 0;
+        margin-right: 0px;
     }
 
     @media (max-width: ${DeviceSize.tablet}px) {
@@ -201,13 +201,11 @@ const OpeningContainer = styled.div`
     flex-direction: column;
     gap: 20px;
     align-self: flex-end;
-    margin-left: auto;
 
     @media (max-width: ${DeviceSize.laptop}px) {
         order: 3;
-        width: 100vh;
+        width: 100%;
         flex-direction: row;
-        justify-content: space-between;
         margin-top: 20px;
     }
 
@@ -226,8 +224,14 @@ const StyledOpeningsContainer = styled.div`
     gap: 20px;
     background-color: ${(props) => props.theme.colors.card};
 
-     @media (max-width: ${DeviceSize.laptop}px) {
+    @media (max-width: ${DeviceSize.laptop}px) {
         max-height: 300px;
+        width: 50%;
+    }
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        max-height: 300px;
+        width: 100%;
     }
 `;
 

@@ -17,17 +17,64 @@ import { getOpenings, getVariants, getNextVariantMove } from "../../../services/
 import { setVariantStatistics } from "../../../services/statisticsService";
 
 const PageContainer = styled.div`
-    height: calc(100vh - 60px);
     display: flex;
     flex-direction: row;
     background-color: ${(props) => props.theme.colors.background};
     padding: 50px;
+
+    @media (min-width: ${DeviceSize.laptop}px) {
+        height: calc(100vh - 60px); 
+    }
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
 `;
 
 const ChessBoardContainer = styled.div`
     width: 60%;
     margin-right: 50px;
     padding-left: 150px;
+
+    @media (max-width: 1700px) {
+        padding-left: 100px;
+    }
+
+    @media (max-width: 1500px) {
+        padding-left: 50px;
+    }
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        order: 1;
+        width: 60%;
+        padding-left: 0px;
+    }
+
+    @media (min-width: 950px) and (max-width: 1050px) {
+        padding-top: 50px;
+    }
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        order: 1;
+        width: 100%;
+        height: 50%;
+        margin-right: 0px;
+        margin-bottom: 20px;
+        padding-left: 200px;
+    }
+
+    @media (max-width: 800px) {
+        padding-left: 100px;;
+    }
+
+    @media (max-width: 700px) {
+        padding-left: 50px;;
+    }
+
+    @media (max-width: 600px) {
+        padding-left: 0px;;
+    }
 `;
 
 //Select Opening and Variant
@@ -38,7 +85,18 @@ const OpeningContainer = styled.div`
     flex-direction: column;
     gap: 20px;
     align-self: flex-end;
-    margin-left: auto;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        order: 3;
+        width: 100%;
+        flex-direction: row;
+        margin-top: 20px;
+    }
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        flex-direction: column;
+        margin-right: 0px;
+    }
 `;
 
 const StyledOpeningsContainer = styled.div`
@@ -49,6 +107,12 @@ const StyledOpeningsContainer = styled.div`
     flex-direction: column;
     gap: 20px;
     background-color: ${(props) => props.theme.colors.card};
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        max-height: 300px;
+        max-width: 500px;
+        flex: 1;
+    }
 `;
 
 const StyledTextFieldWrapper = styled.div`
@@ -102,6 +166,12 @@ const InformationContainer = styled.div`
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     background-color: ${(props) => props.theme.colors.card};
     margin-right: 20px;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        order: 2;
+        flex: 1;
+        margin-right: 0px;
+    }
 `;
 
 const InfoHeader = styled.div`
@@ -146,7 +216,6 @@ const Separator = styled.div`
     background-color: #ccc;
     margin: 15px 0;
 `;
-
 
 export function TrainingPage({ handleLogOut }) {
     const theme = useTheme();
@@ -546,7 +615,7 @@ export function TrainingPage({ handleLogOut }) {
             </ChessBoardContainer>
             <InformationContainer>
                 <InfoHeader>
-                    {selectedVariantId === -1 && <StyledH3>Eröffnung und Variante auswählen</StyledH3>}
+                    {selectedVariantId === -1 &&  <StyledH3>Eröffnung und Variante auswählen</StyledH3>}
                     {selectedVariantId !== -1 && <StyledH3>{selectedVariant.name}</StyledH3>}
                     <ResetButton onClick={resetGame} color="error" title="Spiel zurücksetzen">
                         <RestartAltIcon />
