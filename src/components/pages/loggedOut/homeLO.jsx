@@ -134,7 +134,6 @@ const AdvantageText = styled.p`
 
 export function HomePageLO() {
     const theme = useTheme();
-    const isMobile = useMediaQuery({ maxWidth: DeviceSize.mobile });
     const isLaptop = useMediaQuery({ maxWidth: DeviceSize.laptop });
 
     const buttonColor = {

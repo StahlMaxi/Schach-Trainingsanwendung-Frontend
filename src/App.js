@@ -63,9 +63,9 @@ function App() {
       <NavBar setNavBarOpen={setNavBarOpen} isLoggedIn={isLoggedIn} userName={userName} handleLogOut={handleLogOut}/>
       {!navBarOpen && <Content>
         <Routes>
-          <Route path="/" element={isLoggedIn ? <HomePage/> : <HomePageLO/>}/>
+          <Route path="/" element={isLoggedIn ? <HomePage handleLogOut={handleLogOut}/> : <HomePageLO/>}/>
           <Route path="/learn" element={isLoggedIn ? <LearningPage handleLogOut={handleLogOut}/> : <LearningPageLO/>}/>
-          <Route path="/train/:openingID?/:variantName?" element={isLoggedIn ? <TrainingPage handleLogOut={handleLogOut}/> : <TrainingPageLO />}/>
+          <Route path="/train/:openingID?/:variantID?" element={isLoggedIn ? <TrainingPage handleLogOut={handleLogOut}/> : <TrainingPageLO />}/>
           <Route path="/login" element={!isLoggedIn ? <LoginPage setLoggedIn={setLoggedIn} setUser={setUserName}/> : null}/>
           <Route path="/register" element={!isLoggedIn ? <RegistrationPage/> : null}/>
           <Route path="*" element={<Navigate to="/"/>}></Route>

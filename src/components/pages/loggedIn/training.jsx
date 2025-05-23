@@ -220,7 +220,7 @@ const Separator = styled.div`
 export function TrainingPage({ handleLogOut }) {
     const theme = useTheme();
 
-    const { openingID, variantName } = useParams();
+    const { openingID, variantID } = useParams();
 
     const [boardWidth, setBoardWith] = useState(0);
     const [game, setGame] = useState(new Chess());
@@ -264,10 +264,10 @@ export function TrainingPage({ handleLogOut }) {
             const data = await getVariants(openingId);
             setVariants(data);
 
-            if (variantName) {
-                const variant = data.find(variant => variant.name === variantName);
+            if (variantID) {
+                const variant = data.find(variant => variant.id === variantID);
                 if (variant) {
-                    setVariantSearch(variantName);
+                    setVariantSearch(variant.name);
                     setSelectedVariantId(variant.id);
                     setSelectedVariant(variant);
                 }
@@ -282,7 +282,7 @@ export function TrainingPage({ handleLogOut }) {
             }
             showSnackbar(message, "error");
         }
-    }, [handleLogOut, variantName]);
+    }, [handleLogOut, variantID]);
 
     const getOpeningsRequest = useCallback(async () => {
         try {
@@ -291,6 +291,7 @@ export function TrainingPage({ handleLogOut }) {
 
             if (openingID) {
                 const opening = data.find(opening => opening.id === openingID);
+
                 if (opening) {
                     setOpeningSearch(opening.name);
                     setSelectedOpeningId(openingID);
