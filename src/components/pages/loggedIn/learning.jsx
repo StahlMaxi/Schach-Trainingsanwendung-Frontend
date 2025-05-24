@@ -5,7 +5,7 @@ import { Chessboard } from "react-chessboard";
 import { Button, TextField, IconButton } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useTheme } from "../../../theme/themeContext";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CachedIcon from '@mui/icons-material/Cached';
@@ -15,6 +15,7 @@ import { DeviceSize } from "../../responsive";
 
 import { getOpenings } from "../../../services/openingService";
 import { getNextOpeningMoves } from "../../../services/openingService";
+import { getVariants } from "../../../services/openingService";
 
 const PageContainer = styled.div`
     display: flex;
@@ -331,6 +332,8 @@ export function LearningPage({ handleLogOut }) {
     const [snackbarMessage, setSnackbarMessage] = useState("");
     const [snackbarSeverity, setSnackbarSeverity] = useState("error");
 
+    const navigate = useNavigate();
+
     const buttonColor = {
         backgroundColor: theme.theme.colors.backgroundCounter,
         color: theme.theme.colors.textCounter,
@@ -428,7 +431,6 @@ export function LearningPage({ handleLogOut }) {
         try {
             const data = await getNextOpeningMoves({ id, played });
             const filteredMoves = data.filter(move => move.move && move.move.trim() !== "");
-
             setVariantEnd(false);
 
             if(selectedVariant) {
@@ -519,6 +521,29 @@ export function LearningPage({ handleLogOut }) {
         setIsBoardFlipped(prevState => !prevState);
     };
 
+    const navigateToTrain = async () => {
+        try {
+            const variants = await getVariants(selectedOpening);
+
+            const matchedVariant = variants.find(
+                (variant) => variant.name === endedVariant.name
+            );
+
+            if (matchedVariant) {
+                navigate(`/train/${selectedOpening}/${matchedVariant.id}`);
+            }
+        } catch (error) {
+            let message;
+            if (error.status === 401) {
+                message = "Sie sind nicht autorisiert für diesen Endpunkt.";
+                handleLogOut();
+            } else {
+                message = "Fehler beim Abruf der Varianten.";
+            }
+            showSnackbar(message, "error");
+        }
+    };
+
     return (
         <PageContainer>
             <ChessBoardContainer id="boardDiv">
@@ -536,9 +561,7 @@ export function LearningPage({ handleLogOut }) {
                         <StyledText>
                             Die Eröffnungsvariante <strong>{endedVariant.name}</strong> ist zu Ende. Möchtest du sie nun üben?
                         </StyledText>
-                        <Link to={`/train/${selectedOpening}/${endedVariant.name}`}>
-                            <BackButton sx={buttonColor} variant="contained">Üben</BackButton>
-                        </Link>
+                        <BackButton sx={buttonColor} variant="contained" onClick={navigateToTrain}>Üben</BackButton>
                     </OpeningEndContainer>
                 )}
 

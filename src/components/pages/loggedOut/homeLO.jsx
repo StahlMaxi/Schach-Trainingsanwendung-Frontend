@@ -19,7 +19,7 @@ const WelcomeContainer = styled.div`
     background-color: ${(props) => props.theme.colors.backgroundCounter};
     padding: 20px;
 
-    @media (max-width: ${DeviceSize.tablet}px) {
+    @media (max-width: ${DeviceSize.laptop}px) {
         padding: 0;
     }
 `;
@@ -31,7 +31,7 @@ const WelcomeWrapper = styled.div`
     align-items: center;
     justify-content: center;
 
-    @media (max-width: ${DeviceSize.tablet}px) {
+    @media (max-width: ${DeviceSize.laptop}px) {
         position: relative;
     }
 `;
@@ -41,7 +41,7 @@ const ChessImg = styled.img`
     width: auto;
     object-fit: contain;
 
-    @media (max-width: ${DeviceSize.tablet}px) {
+    @media (max-width: ${DeviceSize.laptop}px) {
         width: 100%;
     }
 `;
@@ -53,9 +53,10 @@ const WelcomeText = styled.h2`
     text-align: center;
     margin: 20px;
 
-    @media (max-width: ${DeviceSize.mobile}px) {
+    @media (max-width: ${DeviceSize.laptop}px) {
         color: ${(props) => props.theme.colors.text};
-        margin-bottom: 50px;
+        margin-right: 50px;
+        flex: 1;
     }
 `;
 
@@ -64,15 +65,19 @@ const FooterContainer = styled.div`
     padding: 20px 100px 20px 100px;
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    max-width: 1600px;
+    gap: 100px;
+    align-self: center;
 
-    @media (max-width: ${DeviceSize.mobile}px) {
-        flex-direction: column;
+    @media (max-width: ${DeviceSize.laptop}px) {
+        flex-direction: row;
         align-items: center;
+        padding: 20px 50px 20px 50px;
+        gap: 10px;
     }
 
-    @media (min-width: ${DeviceSize.tablet}px) {
-        height: 25%;
+    @media (max-width: ${DeviceSize.tablet}px) {
+        flex-direction: column;
     }
 `;
 
@@ -85,7 +90,7 @@ const AccessibilityButtonsContainer = styled.div`
     flex-grow: 1;
     margin: 20px;
 
-    @media (max-width: ${DeviceSize.tablet}px) {
+    @media (max-width: ${DeviceSize.laptop}px) {
         position: absolute;
         top: 30%;
         left: 50%;
@@ -103,12 +108,18 @@ const AdvantagesContainer = styled.div`
     flex-direction: column;
     gap: 4px;
     justify-content: center;
-    flex-grow: 1;
     margin: 20px;
 
-    @media (max-width: ${DeviceSize.mobile}px) {
+    @media (max-width: ${DeviceSize.laptop}px) {
         margin: 0 0 4px 0;
         width: 250px;
+        flex-direction: column;
+        flex-grow: 3;
+    }
+
+    @media (max-width: ${DeviceSize.tablet}px) {
+        flex-direction: column;
+        flex-gorw: 1;
     }
 `;
 
@@ -123,8 +134,7 @@ const AdvantageText = styled.p`
 
 export function HomePageLO() {
     const theme = useTheme();
-    const isMobile = useMediaQuery({ maxWidth: DeviceSize.mobile });
-    const isTablet = useMediaQuery({ maxWidth: DeviceSize.tablet });
+    const isLaptop = useMediaQuery({ maxWidth: DeviceSize.laptop });
 
     const buttonColor = {
         backgroundColor: theme.theme.colors.backgroundCounter,
@@ -140,13 +150,13 @@ export function HomePageLO() {
             <WelcomeContainer>
                 <WelcomeWrapper>
                     <ChessImg src={ChessBoard} alt="Chessboard"/>
-                    {!isTablet && <WelcomeText>
+                    {!isLaptop && <WelcomeText>
                         Meistere den ersten Zug - Entdecke, lerne und perfektioniere die besten Schacheröffnungen!
                     </WelcomeText>}      
                 </WelcomeWrapper>         
             </WelcomeContainer>
             <FooterContainer>
-                {isMobile && <WelcomeText>
+                {isLaptop && <WelcomeText>
                     Meistere den ersten Zug - Entdecke, lerne und perfektioniere die besten Schacheröffnungen!
                 </WelcomeText>} 
                 <AdvantagesContainer>

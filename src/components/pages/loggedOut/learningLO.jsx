@@ -1,7 +1,6 @@
 import React, { useState, useLayoutEffect } from "react";
 import styled from "styled-components";
 import { useTheme } from "../../../theme/themeContext";
-import { DeviceSize } from "../../responsive";
 import { Chessboard } from "react-chessboard";
 import { Link } from "react-router-dom";
 import { Button } from "@mui/material";
@@ -25,7 +24,7 @@ const ChessboardContainer = styled.div`
     padding-left: 100px;
     padding-top: 40px;
 
-    @media (max-width: ${DeviceSize.loPage}px) {
+    @media (max-width: 1500px) {
         display: none;
     }
 `;
@@ -39,7 +38,7 @@ const InformationContainer = styled.div`
     justify-content: center;
     align-items: center;
 
-    @media (max-width: ${DeviceSize.loPage}px) {
+    @media (max-width: 1500px) {
         width: 100%;
         height: 100%;
         background-color: ${(props) => props.theme.colors.background};
@@ -61,7 +60,7 @@ const StyledHeadline = styled.div`
     font-weight: ${(props) => props.theme.typography.h1.fontWeight};
     font-size: ${(props) => props.theme.typography.h1.fontSize};
 
-    @media (max-width: ${DeviceSize.loPage}px) {
+    @media (max-width: 1500px) {
         color: ${(props) => props.theme.colors.text};
     }
 `;
@@ -71,7 +70,7 @@ const StyledText = styled.div`
     font-weight: ${(props) => props.theme.typography.h3.fontWeight};
     font-size: ${(props) => props.theme.typography.h3.fontSize};
 
-    @media (max-width: ${DeviceSize.loPage}px) {
+    @media (max-width: 1500px) {
         color: ${(props) => props.theme.colors.text};
     }
 `;
