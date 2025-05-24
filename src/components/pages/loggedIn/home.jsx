@@ -153,15 +153,15 @@ const RightContainer = styled.div`
 `;
 
 const RankingContainer = styled.div`
+    height: 50vh;
     flex: 1;
     padding: 50px;
-    overflow: hidden;
     margin-bottom: 50px;
     max-width: 1000px;
 `;
 
 const RankingScrollContainer = styled.div`
-    height: 100%;
+    height: 90%;
     overflow-y: auto;
     padding-bottom: 20px;
     padding: 25px;
@@ -190,6 +190,11 @@ const RankingH2 = styled.h2`
     color: ${(props) => props.theme.colors.textCounter};
     font-weight: ${(props) => props.theme.typography.h2.fontWeight};
     font-size: ${(props) => props.theme.typography.h2.fontSize};
+
+    @media (max-width: 1600px) {
+        font-weight: ${(props) => props.theme.typography.h3.fontWeight};
+    font-size: ${(props) => props.theme.typography.h3.fontSize};
+    }
 
     @media (max-width: ${DeviceSize.laptop}px) {
         color: ${(props) => props.theme.colors.text};

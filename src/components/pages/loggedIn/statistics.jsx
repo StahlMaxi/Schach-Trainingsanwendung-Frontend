@@ -36,11 +36,10 @@ const LeftContainer = styled.div`
 const RankingContainer = styled.div`
     height: 100%;
     width: 75%;
-    overflow: hidden;
 `;
 
 const RankingScrollContainer = styled.div`
-    height: 100%;
+    height: 90%;
     overflow-y: auto;
     padding: 25px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -148,7 +147,7 @@ const OpeningItem = styled.div`
 `;
 
 const VariantStatisticContainer = styled.div`
-  height: 75%;
+  height: auto;
   padding: 30px;
   background-color: ${(props) => props.theme.colors.navbar || '#f7f7f7'};
   border-radius: 16px;
