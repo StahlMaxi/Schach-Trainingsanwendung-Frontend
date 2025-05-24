@@ -1,7 +1,6 @@
 import React, { useState, useLayoutEffect } from "react";
 import styled from "styled-components";
 import { useTheme } from "../../../theme/themeContext";
-import { DeviceSize } from "../../responsive";
 import { Chessboard } from "react-chessboard";
 import { Link } from "react-router-dom";
 import { Button } from "@mui/material";

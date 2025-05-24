@@ -12,6 +12,8 @@ import { LoginPage } from './components/pages/login';
 import { RegistrationPage } from './components/pages/registration';
 import { LearningPageLO } from './components/pages/loggedOut/learningLO';
 import { TrainingPageLO } from './components/pages/loggedOut/trainingLO';
+import { StatisticsPage } from './components/pages/loggedIn/statistics';
+import { ChessOpeningPage } from './components/pages/loggedIn/chessopening';
 
 const AppContainer = styled.div`
   min-width: 375px;
@@ -65,6 +67,8 @@ function App() {
         <Routes>
           <Route path="/" element={isLoggedIn ? <HomePage handleLogOut={handleLogOut}/> : <HomePageLO/>}/>
           <Route path="/learn" element={isLoggedIn ? <LearningPage handleLogOut={handleLogOut}/> : <LearningPageLO/>}/>
+          <Route path="/statistics" element={isLoggedIn ? <StatisticsPage handleLogOut={handleLogOut} /> : null} />
+          <Route path="/chessopening" element={isLoggedIn ? <ChessOpeningPage /> : null} />
           <Route path="/train/:openingID?/:variantID?" element={isLoggedIn ? <TrainingPage handleLogOut={handleLogOut}/> : <TrainingPageLO />}/>
           <Route path="/login" element={!isLoggedIn ? <LoginPage setLoggedIn={setLoggedIn} setUser={setUserName}/> : null}/>
           <Route path="/register" element={!isLoggedIn ? <RegistrationPage/> : null}/>

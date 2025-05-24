@@ -164,7 +164,12 @@ const RankingScrollContainer = styled.div`
     height: 100%;
     overflow-y: auto;
     padding-bottom: 20px;
+    padding: 25px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    background-color: ${(props) => props.theme.colors.navbar};
 `;
+
 
 const RankingEntry = styled.div`
     margin-bottom: 20px;
@@ -177,12 +182,7 @@ const RankingEntry = styled.div`
 
     &:hover {
         transform: scale(1.02);
-    }
-
-    @media (max-width: ${DeviceSize.laptop}px) {
-        background-color: ${(props) => props.theme.colors.backgroundCounter};
-        color: ${(props) => props.theme.colors.textCounter};
-    }   
+    } 
 `;
 
 const RankingH2 = styled.h2`
@@ -343,7 +343,7 @@ export function HomePage({ handleLogOut }) {
                     <Link to="/statistics">
                         <NavigationButton sx={buttonColorNav} variant="contained">Deine Statistiken</NavigationButton>
                     </Link>
-                    <Link to="/opening">
+                    <Link to="/chessopening">
                         <NavigationButton  sx={buttonColorNav} variant="contained">Die Schacheröffnung</NavigationButton>
                     </Link>
                 </NavigationButtonsContainer>
