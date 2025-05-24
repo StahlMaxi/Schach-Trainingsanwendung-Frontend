@@ -12,6 +12,11 @@ import { getOpeningStatistics, getVariantStatistics } from "../../../services/st
 const PageContainer = styled.div`
     height: calc(100vh - 60px);
     display: flex;
+    flex-direction: row;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        flex-direction: column;
+    }
 `;
 
 //Left
@@ -22,6 +27,10 @@ const LeftContainer = styled.div`
     align-items: center;
     justify-content: center;
     padding: 50px;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        width: 100%;
+    }
 `;
 
 const RankingContainer = styled.div`
@@ -73,12 +82,23 @@ const RightContainer = styled.div`
     display: flex,
     flex-direction: column;
     padding: 50px;
+
+    @media (max-width: ${DeviceSize.laptop}px) {
+        width: 100%;
+    }
 `
 
 const TextFieldContainer = styled.div`
     display: flex;
     flex-direction: row;
     gap: 50px;
+
+    @media (max-width: ${DeviceSize.mobile}px) {
+        flex-direction: column;
+        gap: 10px;
+        align-items:center;
+        justify-content: center;
+    }
 `;
 
 const StyledOpeningsContainer = styled.div`
@@ -89,12 +109,6 @@ const StyledOpeningsContainer = styled.div`
     flex-direction: column;
     gap: 20px;
     background-color: ${(props) => props.theme.colors.card};
-
-    @media (max-width: ${DeviceSize.laptop}px) {
-        max-height: 300px;
-        max-width: 500px;
-        flex: 1;
-    }
 `;
 
 const StyledTextFieldWrapper = styled.div`
