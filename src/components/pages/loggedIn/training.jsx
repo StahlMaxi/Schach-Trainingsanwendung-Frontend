@@ -230,10 +230,12 @@ export function TrainingPage({ handleLogOut }) {
     const [variants, setVariants] = useState([]);
     const [openingSearch, setOpeningSearch] = useState("");
     const [selectedOpeningId, setSelectedOpeningId] = useState(-1);
+    const [selectedOpening, setSelectedOpening] = useState(null);
     const [variantSearch, setVariantSearch] = useState("");
     const [selectedVariantId, setSelectedVariantId] = useState(-1);
     const [selectedVariant, setSelectedVariant] = useState(null);
 
+    const [isMainLine, setIsMainLine] = useState(false);
     const [startWhite, setStartWhite] = useState(true);
     const [playedMoves, setPlayedMoves] = useState("");
 
@@ -365,6 +367,7 @@ export function TrainingPage({ handleLogOut }) {
     const openingSelected = (opening) => {
         setOpeningSearch(opening.name);
         setSelectedOpeningId(opening.id);
+        setSelectedOpening(opening);
         getVariantsRequest(opening.id);
     }
 
@@ -377,6 +380,8 @@ export function TrainingPage({ handleLogOut }) {
         setVariantSearch("");
         setSelectedOpeningId(-1);
         setSelectedVariantId(-1);
+        setSelectedOpening(null);
+        setSelectedVariant(null);
         navigate("/train");
 
         resetGame();
@@ -393,6 +398,12 @@ export function TrainingPage({ handleLogOut }) {
         setVariantSearch(variant.name);
         setSelectedVariantId(variant.id);
         setSelectedVariant(variant);
+
+        if(selectedOpening.name === variant.name) {
+            setIsMainLine(true);
+            setStartWhite(true);
+            setGameText("Bei dieser Variante handelt es sich um eine Hauptvariante, weshalb nur die Weiße Seite zur Verfügung steht")
+        }
     };
 
     const resetSelectedVariant = () => {
@@ -499,6 +510,7 @@ export function TrainingPage({ handleLogOut }) {
         const nextMove = variantData?.move;
 
         if (!nextMove) {
+            setGameRunning(false);
             setGameText("Die Variante ist zu Ende. Deine Ergebnisse werden nun abgespeichert. Du kannst nun entweder eine neue Eröffnung trainieren oder von vorne starten.");
             setVariantStatisticsRequest();
             setTimeout(async () => {
@@ -524,6 +536,7 @@ export function TrainingPage({ handleLogOut }) {
         const newNextMove = newVariantData?.move;
 
         if(!newNextMove) {
+            setGameRunning(false);
             setGameText("Die Variante ist zu Ende. Deine Ergebnisse werden nun abgespeichert. Du kannst nun entweder eine neue Eröffnung trainieren oder von vorne starten.");
             setVariantStatisticsRequest();
             setTimeout(async () => {
@@ -545,6 +558,8 @@ export function TrainingPage({ handleLogOut }) {
         setPlayedMoves("");
 
         setNextExpectedPlayerMove(null);
+
+        setIsMainLine(false);
 
         setGameText("");
         setErrors(0);
@@ -626,7 +641,7 @@ export function TrainingPage({ handleLogOut }) {
                 <Separator />
 
                 <InfoSection>
-                    {selectedVariantId !== -1 && !gameRunning && <strong><p>Wähle eine Startseite und starte das Spiel über den Startknopf</p></strong>}
+                    {selectedVariantId !== -1 && playedMoves === "" && <strong><p>Wähle eine Startseite und starte das Spiel über den Startknopf</p></strong>}
                     {playerError && <strong><p style={{ color: "red" }}>{gameText}</p></strong>}
                     {!playerError && <strong><p>{gameText}</p></strong>}
                 </InfoSection>
@@ -726,7 +741,7 @@ export function TrainingPage({ handleLogOut }) {
                             value={startWhite}
                             onChange={(e) => setStartWhite(e.target.value === "true")}
                             label="Farbe wählen"
-                            disabled={gameRunning}
+                            disabled={gameRunning || isMainLine}
                         >
                             <MenuItem value="true">Weiß</MenuItem>
                             <MenuItem value="false">Schwarz</MenuItem>
