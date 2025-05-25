@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { Button } from "@mui/material";
 import { useMediaQuery } from "react-responsive";
 import { DeviceSize } from "../../responsive";
-import ChessBoard from "../../../assets/chessBoard.webp";
+import ChessBoard from "../../../assets/chessBoard.jpg";
 import { useTheme } from "../../../theme/themeContext";
 import { Link } from "react-router-dom";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -58,6 +58,12 @@ const WelcomeText = styled.h2`
         margin-right: 50px;
         flex: 1;
     }
+
+    @media (max-width: ${DeviceSize.phone}px) {
+        font-weight: ${(props) => props.theme.typography.h3.fontWeight};
+        font-size: ${(props) => props.theme.typography.h3.fontSize};
+        margin-right: 0px;
+    }
 `;
 
 const FooterContainer = styled.div`
@@ -95,6 +101,10 @@ const AccessibilityButtonsContainer = styled.div`
         top: 30%;
         left: 50%;
         transform: translate(-50%, -50%);
+    }
+
+    @media (max-width: ${DeviceSize.phone}px) {
+        top: 20%;
     }
 `;
 

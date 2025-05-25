@@ -15,6 +15,10 @@ const commonTypography = {
     fontSize: '1.5rem',
     fontWeight: 500,
   },
+  h4: {
+    fontSize: '1.0rem',
+    fontWeight: 500,
+  },
   body: {
     fontSize: '1rem',
     fontWeight: 400,

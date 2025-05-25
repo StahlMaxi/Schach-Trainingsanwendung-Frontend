@@ -143,6 +143,7 @@ const RightContainer = styled.div`
     height: 100%;
     display: flex;
     flex-direction: column;
+    padding: 50px;
 
     @media (max-width: ${DeviceSize.laptop}px) {
         width: 100%;
@@ -155,7 +156,6 @@ const RightContainer = styled.div`
 const RankingContainer = styled.div`
     height: 50vh;
     flex: 1;
-    padding: 50px;
     margin-bottom: 50px;
     max-width: 1000px;
 `;
@@ -193,11 +193,16 @@ const RankingH2 = styled.h2`
 
     @media (max-width: 1600px) {
         font-weight: ${(props) => props.theme.typography.h3.fontWeight};
-    font-size: ${(props) => props.theme.typography.h3.fontSize};
+        font-size: ${(props) => props.theme.typography.h3.fontSize};
     }
 
     @media (max-width: ${DeviceSize.laptop}px) {
         color: ${(props) => props.theme.colors.text};
+    }
+
+    @media (max-width: ${DeviceSize.phone}px) {
+        font-weight: ${(props) => props.theme.typography.h4.fontWeight};
+        font-size: ${(props) => props.theme.typography.h4.fontSize};
     }
 `;
 
@@ -219,6 +224,7 @@ const NavigationButtonsContainer = styled.div`
 
     @media (max-width: ${DeviceSize.tablet}px) {
         flex-direction: column;
+        margin-top: 20px;
     }
 `;
 

@@ -4,6 +4,7 @@ import { useTheme } from "../../../theme/themeContext";
 import { Chessboard } from "react-chessboard";
 import { Link } from "react-router-dom";
 import { Button } from "@mui/material";
+import { DeviceSize } from "../../responsive";
 
 const PageContainer = styled.div`
     height: calc(100vh - 60px);
@@ -72,6 +73,10 @@ const StyledText = styled.div`
 
     @media (max-width: 1500px) {
         color: ${(props) => props.theme.colors.text};
+    }
+
+    @media (max-width: ${DeviceSize.phone}px) {
+        margin-top: 20px;
     }
 `;
 
